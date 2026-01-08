@@ -13,6 +13,7 @@ const SAMPLE_JOBS = [
     experienceLevel: 'senior',
     tools: ['Cursor', 'Claude', 'React', 'TypeScript'],
     testFormat: '1-hour live build: We\'ll share a Figma design and watch you build it using your preferred AI tools.',
+    postedDaysAgo: 1,
   },
   {
     id: 2,
@@ -26,6 +27,7 @@ const SAMPLE_JOBS = [
     experienceLevel: 'mid',
     tools: ['Claude Code', 'Copilot', 'Next.js', 'Python'],
     testFormat: '24-hour take-home: Build an API endpoint and a small UI that consumes it. Deploy to Vercel or similar.',
+    postedDaysAgo: 3,
   },
   {
     id: 3,
@@ -39,6 +41,7 @@ const SAMPLE_JOBS = [
     experienceLevel: 'senior',
     tools: ['Claude Code', 'Cursor', 'Go', 'Kubernetes'],
     testFormat: 'Pair programming session: We\'ll work on a real issue from our backlog together. You drive, use any tools.',
+    postedDaysAgo: 2,
   },
   {
     id: 4,
@@ -52,6 +55,7 @@ const SAMPLE_JOBS = [
     experienceLevel: 'senior',
     tools: ['ChatGPT', 'Claude', 'Notion AI', 'Perplexity'],
     testFormat: '2-hour PRD sprint: We\'ll describe a feature we\'re considering. Write a spec, prioritize requirements, and define success metrics.',
+    postedDaysAgo: 5,
   },
   {
     id: 5,
@@ -65,6 +69,7 @@ const SAMPLE_JOBS = [
     experienceLevel: 'senior',
     tools: ['Figma AI', 'Midjourney', 'Claude', 'v0'],
     testFormat: 'Design challenge: Take a product problem and explore solutions. Show us your AI-augmented process.',
+    postedDaysAgo: 7,
   },
   {
     id: 6,
@@ -78,6 +83,7 @@ const SAMPLE_JOBS = [
     experienceLevel: 'entry',
     tools: ['Cursor', 'ChatGPT', 'React'],
     testFormat: '1-hour live coding: Build a simple component with us. AI tools encouraged.',
+    postedDaysAgo: 14,
   },
 ]
 
@@ -99,6 +105,8 @@ export default function JobListings({ navigate }) {
     experienceLevel: 'all',
     tools: [],
   })
+  const [sortBy, setSortBy] = useState('newest')
+  const [savedJobs, setSavedJobs] = useState(new Set())
 
   const filteredJobs = SAMPLE_JOBS.filter(job => {
     // Category filter
@@ -121,6 +129,10 @@ export default function JobListings({ navigate }) {
     }
 
     return true
+  }).sort((a, b) => {
+    if (sortBy === 'newest') return a.postedDaysAgo - b.postedDaysAgo
+    if (sortBy === 'salary') return b.salaryMax - a.salaryMax
+    return 0
   })
 
   const toggleTool = (tool) => {
@@ -132,9 +144,30 @@ export default function JobListings({ navigate }) {
     }))
   }
 
+  const toggleSave = (jobId, e) => {
+    e.stopPropagation()
+    setSavedJobs(prev => {
+      const next = new Set(prev)
+      if (next.has(jobId)) {
+        next.delete(jobId)
+      } else {
+        next.add(jobId)
+      }
+      return next
+    })
+  }
+
   const formatSalary = (min, max) => {
     const formatK = (n) => `$${Math.round(n / 1000)}k`
     return `${formatK(min)} - ${formatK(max)}`
+  }
+
+  const formatPostedDate = (days) => {
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    if (days < 7) return `${days} days ago`
+    if (days < 14) return '1 week ago'
+    return `${Math.floor(days / 7)} weeks ago`
   }
 
   return (
@@ -267,8 +300,16 @@ export default function JobListings({ navigate }) {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
               <h2>{filteredJobs.length} jobs</h2>
-              <div className="text-sm text-[var(--color-text-muted)]">
-                Sorted by newest
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--color-text-muted)]">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent)] cursor-pointer"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="salary">Highest salary</option>
+                </select>
               </div>
             </div>
 
@@ -276,17 +317,36 @@ export default function JobListings({ navigate }) {
               {filteredJobs.map(job => (
                 <div key={job.id} className="card group cursor-pointer hover:border-[var(--color-accent)] transition-all">
                   <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                    <div>
-                      <h4 className="group-hover:text-[var(--color-accent)] transition-colors">
-                        {job.title}
-                      </h4>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="group-hover:text-[var(--color-accent)] transition-colors">
+                          {job.title}
+                        </h4>
+                        <button
+                          onClick={(e) => toggleSave(job.id, e)}
+                          className="shrink-0 p-1.5 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                          title={savedJobs.has(job.id) ? 'Remove from saved' : 'Save job'}
+                        >
+                          <svg
+                            className={`w-5 h-5 transition-colors ${savedJobs.has(job.id) ? 'text-[var(--color-accent)] fill-current' : 'text-[var(--color-text-muted)]'}`}
+                            fill={savedJobs.has(job.id) ? 'currentColor' : 'none'}
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                          </svg>
+                        </button>
+                      </div>
                       <p className="text-sm">
                         {job.company} · {job.location} · {job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1)}
                       </p>
                     </div>
-                    <span className="badge badge-secondary shrink-0 text-base px-3 py-1">
-                      {formatSalary(job.salaryMin, job.salaryMax)}
-                    </span>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs text-[var(--color-text-muted)]">{formatPostedDate(job.postedDaysAgo)}</span>
+                      <span className="badge badge-secondary text-base px-3 py-1">
+                        {formatSalary(job.salaryMin, job.salaryMax)}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-4">
