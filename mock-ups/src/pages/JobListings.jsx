@@ -14,6 +14,7 @@ const SAMPLE_JOBS = [
     tools: ['Cursor', 'Claude', 'React', 'TypeScript'],
     testFormat: '1-hour live build: We\'ll share a Figma design and watch you build it using your preferred AI tools.',
     postedDaysAgo: 1,
+    verified: true,
   },
   {
     id: 2,
@@ -28,6 +29,7 @@ const SAMPLE_JOBS = [
     tools: ['Claude Code', 'Copilot', 'Next.js', 'Python'],
     testFormat: '24-hour take-home: Build an API endpoint and a small UI that consumes it. Deploy to Vercel or similar.',
     postedDaysAgo: 3,
+    verified: true,
   },
   {
     id: 3,
@@ -42,6 +44,7 @@ const SAMPLE_JOBS = [
     tools: ['Claude Code', 'Cursor', 'Go', 'Kubernetes'],
     testFormat: 'Pair programming session: We\'ll work on a real issue from our backlog together. You drive, use any tools.',
     postedDaysAgo: 2,
+    verified: true,
   },
   {
     id: 4,
@@ -56,6 +59,7 @@ const SAMPLE_JOBS = [
     tools: ['ChatGPT', 'Claude', 'Notion AI', 'Perplexity'],
     testFormat: '2-hour PRD sprint: We\'ll describe a feature we\'re considering. Write a spec, prioritize requirements, and define success metrics.',
     postedDaysAgo: 5,
+    verified: true,
   },
   {
     id: 5,
@@ -70,6 +74,7 @@ const SAMPLE_JOBS = [
     tools: ['Figma AI', 'Midjourney', 'Claude', 'v0'],
     testFormat: 'Design challenge: Take a product problem and explore solutions. Show us your AI-augmented process.',
     postedDaysAgo: 7,
+    verified: true,
   },
   {
     id: 6,
@@ -84,6 +89,7 @@ const SAMPLE_JOBS = [
     tools: ['Cursor', 'ChatGPT', 'React'],
     testFormat: '1-hour live coding: Build a simple component with us. AI tools encouraged.',
     postedDaysAgo: 14,
+    verified: false,
   },
 ]
 
@@ -356,8 +362,14 @@ export default function JobListings({ navigate }) {
                           </svg>
                         </button>
                       </div>
-                      <p className="text-sm">
-                        {job.company} · {job.location} · {job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1)}
+                      <p className="text-sm flex items-center gap-1">
+                        <span>{job.company}</span>
+                        {job.verified && (
+                          <svg className="w-4 h-4 text-[var(--color-accent)]" viewBox="0 0 24 24" fill="currentColor" title="Verified employer">
+                            <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        <span>· {job.location} · {job.locationType.charAt(0).toUpperCase() + job.locationType.slice(1)}</span>
                       </p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">

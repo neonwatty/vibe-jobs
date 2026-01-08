@@ -7,8 +7,8 @@ export default function LandingPage({ navigate }) {
           vibe<span className="text-[var(--color-accent)]">jobs</span>
         </div>
         <div className="flex items-center gap-4">
-          <button className="btn btn-ghost">Log in</button>
-          <button className="btn btn-secondary">Sign up</button>
+          <button onClick={() => navigate('login')} className="btn btn-ghost">Log in</button>
+          <button onClick={() => navigate('signup')} className="btn btn-secondary">Sign up</button>
         </div>
       </nav>
 
