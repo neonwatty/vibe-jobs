@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "contexts/**/*.{ts,tsx}"
+  ],
+  "project": ["**/*.{ts,tsx}"],
+  "ignore": [
+    "**/*.test.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "__tests__/**"
+  ],
+  "ignoreDependencies": [
+    "@tailwindcss/postcss",
+    "tailwindcss"
+  ],
+  "next": {
+    "entry": [
+      "app/**/page.tsx",
+      "app/**/layout.tsx",
+      "app/**/route.ts",
+      "app/**/loading.tsx",
+      "app/**/error.tsx",
+      "app/**/not-found.tsx",
+      "middleware.ts"
+    ]
+  }
+}

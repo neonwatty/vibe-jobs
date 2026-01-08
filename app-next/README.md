@@ -2,6 +2,8 @@
 
 A job board for AI-native professionals. Built with Next.js 15, Supabase, and Tailwind CSS 4.
 
+**Live Demo:** [vibe-jobs-1ktf2jvum-jermwatts-projects.vercel.app](https://vibe-jobs-1ktf2jvum-jermwatts-projects.vercel.app)
+
 ## Features
 
 - 🤖 **AI Tool Matching** - Match candidates with jobs based on AI tools proficiency
