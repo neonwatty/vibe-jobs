@@ -126,8 +126,9 @@
 ## Public Pages
 
 ### Job Listings `/jobs`
-- Filter by: role type, AI tools, location, experience level
-- Job cards: title, company, tools required, salary range, test format preview
+- Filter by: role type, AI tools, location, experience level, **minimum salary**
+- Salary is required on all posts (no "competitive salary" allowed)
+- Job cards: title, company, tools required, salary range (prominent), test format preview
 - Click through to detail
 
 ### Job Detail `/jobs/[id]`

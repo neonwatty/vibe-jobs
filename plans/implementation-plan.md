@@ -116,8 +116,8 @@ Users can search jobs/talent via their LLM tools through MCP.
   "description": "string",
   "ai_tools_required": ["string"],
   "ai_proficiency": "familiar | proficient | expert",
-  "salary_min": "number (optional)",
-  "salary_max": "number (optional)",
+  "salary_min": "number (required)",
+  "salary_max": "number (required)",
   "how_youll_be_tested": "string"
 }
 ```

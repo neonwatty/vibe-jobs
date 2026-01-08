@@ -49,7 +49,10 @@ export default function ForEngineers({ navigate }) {
           </p>
 
           {/* CTA */}
-          <button className="btn btn-primary text-lg px-10 py-4 mb-8">
+          <button
+            onClick={() => navigate('jobs')}
+            className="btn btn-primary text-lg px-10 py-4 mb-8"
+          >
             Browse engineering jobs
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -200,7 +203,10 @@ export default function ForEngineers({ navigate }) {
           </div>
 
           <div className="text-center mt-12">
-            <button className="btn btn-secondary">
+            <button
+              onClick={() => navigate('jobs')}
+              className="btn btn-secondary"
+            >
               View all engineering jobs
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />

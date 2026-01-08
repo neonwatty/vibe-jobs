@@ -33,8 +33,8 @@ Same bar as employees: if you're posting on Vibe Jobs, you can use an LLM to str
   "ai_tools_required": ["string"],
   "ai_proficiency": "familiar | proficient | expert",
 
-  "salary_min": "number (optional)",
-  "salary_max": "number (optional)",
+  "salary_min": "number (required)",
+  "salary_max": "number (required)",
 
   "how_youll_be_tested": "string (description of interview/test format)"
 }
@@ -109,8 +109,9 @@ Employers can write their own or pick from templates:
 
 - Required: company_name, job_title, role_category, employment_type, description
 - ai_tools_required must not be empty
-- how_youll_be_tested should be non-empty (warning if blank)
-- Salary fields: if one is filled, both should be filled
+- how_youll_be_tested must be non-empty (required)
+- salary_min and salary_max are both required (no "competitive salary" allowed)
+- salary_max must be >= salary_min
 
 ---
 

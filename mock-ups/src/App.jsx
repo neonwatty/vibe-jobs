@@ -4,6 +4,7 @@ import TalentHub from './pages/TalentHub'
 import EmployerHub from './pages/EmployerHub'
 import ForEngineers from './pages/ForEngineers'
 import ForProduct from './pages/ForProduct'
+import JobListings from './pages/JobListings'
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing')
@@ -22,6 +23,8 @@ function App() {
         return <ForEngineers navigate={navigate} />
       case 'product':
         return <ForProduct navigate={navigate} />
+      case 'jobs':
+        return <JobListings navigate={navigate} />
       default:
         return <LandingPage navigate={navigate} />
     }
