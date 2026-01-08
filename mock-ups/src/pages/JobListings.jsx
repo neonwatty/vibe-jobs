@@ -97,6 +97,13 @@ const SALARY_RANGES = [
 
 const AI_TOOLS = ['Cursor', 'Claude', 'Claude Code', 'ChatGPT', 'Copilot', 'Midjourney', 'Figma AI', 'Notion AI', 'Perplexity', 'v0']
 
+// Mock logged-in user profile (would come from auth/database in real app)
+const MOCK_USER = {
+  name: 'Alex Chen',
+  tools: ['Cursor', 'Claude', 'Claude Code', 'ChatGPT', 'React', 'TypeScript', 'Next.js'],
+  isLoggedIn: true,
+}
+
 export default function JobListings({ navigate }) {
   const [filters, setFilters] = useState({
     category: 'all',
@@ -107,6 +114,7 @@ export default function JobListings({ navigate }) {
   })
   const [sortBy, setSortBy] = useState('newest')
   const [savedJobs, setSavedJobs] = useState(new Set())
+  const [appliedJobs, setAppliedJobs] = useState(new Set())
 
   const filteredJobs = SAMPLE_JOBS.filter(job => {
     // Category filter
@@ -168,6 +176,17 @@ export default function JobListings({ navigate }) {
     if (days < 7) return `${days} days ago`
     if (days < 14) return '1 week ago'
     return `${Math.floor(days / 7)} weeks ago`
+  }
+
+  const getToolMatch = (jobTools) => {
+    const aiTools = jobTools.filter(t => AI_TOOLS.includes(t))
+    const matchingTools = aiTools.filter(t => MOCK_USER.tools.includes(t))
+    return { matching: matchingTools.length, total: aiTools.length, tools: matchingTools }
+  }
+
+  const handleQuickApply = (jobId, e) => {
+    e.stopPropagation()
+    setAppliedJobs(prev => new Set([...prev, jobId]))
   }
 
   return (
@@ -349,15 +368,55 @@ export default function JobListings({ navigate }) {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {job.tools.map(tool => (
-                      <span key={tool} className="badge badge-accent">{tool}</span>
-                    ))}
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {job.tools.map(tool => {
+                      const isMatch = MOCK_USER.tools.includes(tool)
+                      return (
+                        <span
+                          key={tool}
+                          className={`badge ${isMatch ? 'badge-accent' : ''}`}
+                          title={isMatch ? 'You have this tool' : ''}
+                        >
+                          {tool}
+                        </span>
+                      )
+                    })}
+                    {(() => {
+                      const match = getToolMatch(job.tools)
+                      if (match.total === 0) return null
+                      return (
+                        <span className={`text-xs font-medium ml-2 ${match.matching === match.total ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`}>
+                          {match.matching}/{match.total} AI tools match
+                        </span>
+                      )
+                    })()}
                   </div>
 
                   <div className="border-t border-[var(--color-border)] pt-4">
-                    <div className="text-mono text-xs text-[var(--color-text-muted)] mb-2">HOW YOU'LL BE TESTED</div>
-                    <p className="text-sm">{job.testFormat}</p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="text-mono text-xs text-[var(--color-text-muted)] mb-2">HOW YOU'LL BE TESTED</div>
+                        <p className="text-sm">{job.testFormat}</p>
+                      </div>
+                      {MOCK_USER.isLoggedIn && (
+                        <button
+                          onClick={(e) => handleQuickApply(job.id, e)}
+                          disabled={appliedJobs.has(job.id)}
+                          className={`shrink-0 btn ${appliedJobs.has(job.id) ? 'btn-ghost cursor-default' : 'btn-primary'}`}
+                        >
+                          {appliedJobs.has(job.id) ? (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Applied
+                            </>
+                          ) : (
+                            'Quick Apply'
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
