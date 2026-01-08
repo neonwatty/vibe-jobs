@@ -16,16 +16,16 @@ export default function LandingPage({ navigate }) {
       <main className="container">
         <div className="flex flex-col items-center text-center pt-24 pb-32">
 
-          {/* Eyebrow */}
-          <div className="badge badge-accent mb-8 animate-fade-in">
-            The anti-LeetCode job board
-          </div>
-
           {/* Main headline */}
-          <h1 className="text-display text-display-xl max-w-4xl mb-8 stagger-children">
-            <span className="block">Jobs where AI</span>
-            <span className="block text-[var(--color-accent)]">isn't cheating.</span>
+          <h1 className="text-display text-display-xl max-w-4xl mb-6 stagger-children">
+            <span className="block">The job board for</span>
+            <span className="block text-[var(--color-accent)]">AI-native workers.</span>
           </h1>
+
+          {/* Subtitle */}
+          <p className="text-display text-display-md text-[var(--color-text-secondary)] max-w-2xl mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            AI fluency is what really matters.
+          </p>
 
           {/* Subhead */}
           <p className="text-large max-w-2xl mb-16 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
@@ -90,10 +90,12 @@ export default function LandingPage({ navigate }) {
 
         {/* Sample job cards preview */}
         <div className="pb-24">
-          <h2 className="text-center mb-12">
-            <span className="text-[var(--color-text-muted)]">Jobs that look like</span>{' '}
-            <span className="text-[var(--color-accent)]">this</span>
-          </h2>
+          <div className="flex flex-col items-center mb-12">
+            <div className="badge badge-accent mb-4">Skip the theater</div>
+            <h2 className="text-center">
+              Every job shows how you'll be tested
+            </h2>
+          </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
 
