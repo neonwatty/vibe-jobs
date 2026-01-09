@@ -30,3 +30,6 @@ export async function createClient() {
     }
   )
 }
+
+// Re-export Database types for type-safe queries when needed
+export type { Database } from '../database.types'
