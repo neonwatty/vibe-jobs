@@ -13,3 +13,6 @@ export function createClient() {
     supabaseAnonKey || 'placeholder-key'
   )
 }
+
+// Re-export Database types for type-safe queries when needed
+export type { Database } from '../database.types'
