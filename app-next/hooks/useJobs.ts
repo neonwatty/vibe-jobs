@@ -1,53 +1,40 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { Tables, Enums } from '@/lib/database.types'
 
-interface Job {
-  id: string
-  title: string
-  salary_min?: number
-  salary_max?: number
-  salary_currency?: string
-  location_type?: string
-  location_details?: string
-  experience_level?: string
-  ai_tools_required?: string[]
-  ai_proficiency?: string
-  how_youll_be_tested?: string
-  description?: string
-  requirements?: string[]
-  nice_to_have?: string[]
-  benefits?: string[]
-  role_category?: string
-  employment_type?: string
-  status?: string
-  created_at?: string
-  company?: {
-    id: string
-    name?: string
-    logo_url?: string
-    ai_culture?: string
-    domain_verified?: boolean
-    description?: string
-    website?: string
-    size?: string
-    industry?: string
-    headquarters?: string
-    remote_policy?: string
-    ai_tools_used?: string[]
-  }
+type DBJob = Tables<'jobs'>
+type DBCompany = Tables<'companies'>
+type DBApplication = Tables<'applications'>
+
+// Company subset returned from list queries
+type JobListCompany = Pick<DBCompany, 'id' | 'name' | 'logo_url' | 'ai_culture' | 'domain_verified'>
+
+// Company subset returned from detail queries
+type JobDetailCompany = Pick<DBCompany, 'id' | 'name' | 'logo_url' | 'ai_culture' | 'domain_verified' | 'description' | 'website' | 'company_size' | 'industry' | 'headquarters' | 'remote_policy' | 'ai_tools_used'>
+
+// Job type for list views
+interface JobListItem extends DBJob {
+  company: JobListCompany | null
 }
 
-interface Application {
-  id: string
-  job_id: string
-  profile_id: string
-  status: string
-  cover_message?: string
-  created_at: string
-  updated_at: string
-  job?: Job
+// Job type for detail views
+interface JobDetailItem extends DBJob {
+  company: JobDetailCompany | null
+}
+
+// Application with nested job
+interface ApplicationWithJob extends DBApplication {
+  job: {
+    id: string
+    title: string
+    salary_min: number
+    salary_max: number
+    location_type: Enums<'location_type'>
+    location_details: string | null
+    company: Pick<DBCompany, 'id' | 'name' | 'logo_url'> | null
+  } | null
 }
 
 interface Filters {
@@ -63,7 +50,7 @@ interface Filters {
  * Hook for fetching and managing jobs from Supabase
  */
 export function useJobs(initialFilters: Partial<Filters> = {}) {
-  const [jobs, setJobs] = useState<Job[]>([])
+  const [jobs, setJobs] = useState<JobListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>({
@@ -76,81 +63,106 @@ export function useJobs(initialFilters: Partial<Filters> = {}) {
     ...initialFilters,
   })
   const [sortBy, setSortBy] = useState('newest')
+  const [refetchCounter, setRefetchCounter] = useState(0)
 
-  const supabase = createClient()
-
-  const fetchJobs = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      let query = supabase
-        .from('jobs')
-        .select(`
-          *,
-          company:companies(
-            id,
-            name,
-            logo_url,
-            ai_culture,
-            domain_verified
-          )
-        `)
-        .eq('status', 'active')
-
-      // Apply filters
-      if (filters.category !== 'all') {
-        query = query.eq('role_category', filters.category)
-      }
-
-      if (filters.salaryMin > 0) {
-        query = query.gte('salary_max', filters.salaryMin)
-      }
-
-      if (filters.locationType !== 'all') {
-        query = query.eq('location_type', filters.locationType)
-      }
-
-      if (filters.experienceLevel !== 'all') {
-        query = query.eq('experience_level', filters.experienceLevel)
-      }
-
-      if (filters.search) {
-        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
-      }
-
-      // Apply sorting
-      if (sortBy === 'newest') {
-        query = query.order('created_at', { ascending: false })
-      } else if (sortBy === 'salary') {
-        query = query.order('salary_max', { ascending: false })
-      }
-
-      const { data, error: fetchError } = await query
-
-      if (fetchError) throw fetchError
-
-      // Filter by AI tools on client side (JSONB contains query is complex)
-      let filteredData = data || []
-      if (filters.tools.length > 0) {
-        filteredData = filteredData.filter((job: Job) => {
-          const jobTools = job.ai_tools_required || []
-          return filters.tools.some(tool => jobTools.includes(tool))
-        })
-      }
-
-      setJobs(filteredData)
-    } catch (err) {
-      console.error('Error fetching jobs:', err)
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
-    }
-  }, [filters, sortBy, supabase])
+  const supabase = useMemo(() => createClient(), [])
+  const isMountedRef = useRef(true)
 
   useEffect(() => {
+    isMountedRef.current = true
+
+    const fetchJobs = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        let query = supabase
+          .from('jobs')
+          .select(`
+            *,
+            company:companies(
+              id,
+              name,
+              logo_url,
+              ai_culture,
+              domain_verified
+            )
+          `)
+          .eq('status', 'active')
+
+        // Apply filters
+        if (filters.category !== 'all') {
+          query = query.eq('role_category', filters.category as Enums<'role_category'>)
+        }
+
+        if (filters.salaryMin > 0) {
+          query = query.gte('salary_max', filters.salaryMin)
+        }
+
+        if (filters.locationType !== 'all') {
+          query = query.eq('location_type', filters.locationType as Enums<'location_type'>)
+        }
+
+        if (filters.experienceLevel !== 'all') {
+          query = query.eq('experience_level', filters.experienceLevel as Enums<'experience_level'>)
+        }
+
+        if (filters.search) {
+          query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
+        }
+
+        // Apply sorting
+        if (sortBy === 'newest') {
+          query = query.order('created_at', { ascending: false })
+        } else if (sortBy === 'salary') {
+          query = query.order('salary_max', { ascending: false })
+        }
+
+        const { data, error: fetchError } = await query
+
+        // Only update state if still mounted
+        if (!isMountedRef.current) {
+          return
+        }
+
+        if (fetchError) throw fetchError
+
+        // Filter by AI tools on client side (JSONB contains query is complex)
+        let filteredData = (data || []) as JobListItem[]
+        if (filters.tools.length > 0) {
+          filteredData = filteredData.filter((job) => {
+            const jobTools = job.ai_tools_required || []
+            return filters.tools.some(tool => jobTools.includes(tool))
+          })
+        }
+
+        setJobs(filteredData)
+      } catch (err) {
+        // Ignore AbortError or if unmounted
+        if (!isMountedRef.current) return
+        const error = err as { name?: string; message?: string }
+        if (error?.name === 'AbortError' || error?.message?.toLowerCase().includes('abort')) {
+          return
+        }
+        console.error('Error fetching jobs:', err)
+        setError(error?.message || 'Unknown error')
+      } finally {
+        if (isMountedRef.current) {
+          setLoading(false)
+        }
+      }
+    }
+
     fetchJobs()
-  }, [fetchJobs])
+
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [filters, sortBy, supabase, refetchCounter])
+
+  const refetch = useCallback(() => {
+    setRefetchCounter(c => c + 1)
+  }, [])
 
   const updateFilters = useCallback((newFilters: Partial<Filters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }))
@@ -176,7 +188,7 @@ export function useJobs(initialFilters: Partial<Filters> = {}) {
     updateFilters,
     clearFilters,
     setSortBy,
-    refetch: fetchJobs,
+    refetch,
   }
 }
 
@@ -184,11 +196,11 @@ export function useJobs(initialFilters: Partial<Filters> = {}) {
  * Hook for fetching a single job by ID
  */
 export function useJob(jobId: string | null) {
-  const [job, setJob] = useState<Job | null>(null)
+  const [job, setJob] = useState<JobDetailItem | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!jobId) {
@@ -211,7 +223,7 @@ export function useJob(jobId: string | null) {
               description,
               website,
               logo_url,
-              size,
+              company_size,
               industry,
               headquarters,
               remote_policy,
@@ -225,10 +237,15 @@ export function useJob(jobId: string | null) {
 
         if (fetchError) throw fetchError
 
-        setJob(data)
+        setJob(data as JobDetailItem)
       } catch (err) {
+        // Ignore AbortError - happens when React Strict Mode double-mounts
+        const error = err as { name?: string; message?: string }
+        if (error?.name === 'AbortError' || error?.message?.toLowerCase().includes('abort')) {
+          return
+        }
         console.error('Error fetching job:', err)
-        setError((err as Error).message)
+        setError(error?.message || 'Unknown error')
       } finally {
         setLoading(false)
       }
@@ -247,7 +264,7 @@ export function useSavedJobs(profileId: string | null | undefined) {
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!profileId) {
@@ -314,12 +331,12 @@ export function useSavedJobs(profileId: string | null | undefined) {
  * Hook for managing applications
  */
 export function useApplications(profileId: string | null | undefined) {
-  const [applications, setApplications] = useState<Application[]>([])
+  const [applications, setApplications] = useState<ApplicationWithJob[]>([])
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     if (!profileId) {
@@ -353,11 +370,16 @@ export function useApplications(profileId: string | null | undefined) {
 
         if (fetchError) throw fetchError
 
-        setApplications((data || []) as Application[])
+        setApplications((data || []) as ApplicationWithJob[])
         setAppliedJobIds(new Set((data || []).map(a => a.job_id)))
       } catch (err) {
+        // Ignore AbortError - happens when React Strict Mode double-mounts
+        const error = err as { name?: string; message?: string }
+        if (error?.name === 'AbortError' || error?.message?.toLowerCase().includes('abort')) {
+          return
+        }
         console.error('Error fetching applications:', err)
-        setError((err as Error).message)
+        setError(error?.message || 'Unknown error')
       } finally {
         setLoading(false)
       }
@@ -394,6 +416,8 @@ export function useApplications(profileId: string | null | undefined) {
   const hasApplied = (jobId: string) => appliedJobIds.has(jobId)
 
   const withdrawApplication = async (applicationId: string) => {
+    if (!profileId) throw new Error('No profile ID')
+
     try {
       const { error } = await supabase
         .from('applications')
@@ -405,7 +429,7 @@ export function useApplications(profileId: string | null | undefined) {
 
       setApplications(prev =>
         prev.map(app =>
-          app.id === applicationId ? { ...app, status: 'withdrawn' } : app
+          app.id === applicationId ? { ...app, status: 'withdrawn' as const } : app
         )
       )
     } catch (err) {
@@ -423,3 +447,6 @@ export function useApplications(profileId: string | null | undefined) {
     withdrawApplication,
   }
 }
+
+// Export types for use in other components
+export type { JobListItem, JobDetailItem, ApplicationWithJob, Filters }

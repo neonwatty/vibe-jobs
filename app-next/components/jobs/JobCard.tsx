@@ -9,7 +9,7 @@ interface Job {
   salary_min?: number
   salary_max?: number
   location_type?: string
-  location_details?: string
+  location_details?: string | null
   experience_level?: string
   ai_tools_required?: string[]
   how_youll_be_tested?: string
@@ -17,7 +17,7 @@ interface Job {
   company?: {
     name?: string
     domain_verified?: boolean
-  }
+  } | null
 }
 
 interface JobCardProps {

@@ -19,7 +19,7 @@ async function getJob(id: string) {
         description,
         website,
         logo_url,
-        size,
+        company_size,
         industry,
         headquarters,
         remote_policy,
