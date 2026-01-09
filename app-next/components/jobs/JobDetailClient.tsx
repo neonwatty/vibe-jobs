@@ -18,7 +18,7 @@ interface Job {
   salary_max?: number
   salary_currency?: string
   location_type?: string
-  location_details?: string
+  location_details?: string | null
   experience_level?: string
   employment_type?: string
   ai_tools_required?: string[]
@@ -28,17 +28,17 @@ interface Job {
   company?: {
     id: string
     name?: string
-    description?: string
-    website?: string
-    logo_url?: string
-    size?: string
-    industry?: string
-    headquarters?: string
-    remote_policy?: string
-    ai_culture?: string
+    description?: string | null
+    website?: string | null
+    logo_url?: string | null
+    company_size?: string | null
+    industry?: string | null
+    headquarters?: string | null
+    remote_policy?: string | null
+    ai_culture?: string | null
     ai_tools_used?: string[]
     domain_verified?: boolean
-  }
+  } | null
 }
 
 interface JobDetailClientProps {
@@ -387,10 +387,10 @@ export default function JobDetailClient({ jobId, initialJob }: JobDetailClientPr
               )}
 
               <div className="space-y-3 text-sm">
-                {company?.size && (
+                {company?.company_size && (
                   <div className="flex items-center justify-between">
                     <span className="text-[var(--color-text-muted)]">Company size</span>
-                    <span>{company.size} employees</span>
+                    <span>{company.company_size} employees</span>
                   </div>
                 )}
                 {company?.ai_culture && (

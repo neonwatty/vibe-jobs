@@ -3,27 +3,21 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import type { Tables, TablesInsert, TablesUpdate, Enums } from '@/lib/database.types'
 
-interface Profile {
+// Use database types for Profile and Company
+type DBProfile = Tables<'profiles'>
+type DBCompany = Tables<'companies'>
+
+// Extended interfaces that allow partial data
+interface Profile extends Partial<DBProfile> {
   id: string
   user_id: string
-  first_name?: string
-  last_name?: string
-  email?: string
-  headline?: string
-  role_type?: string
-  ai_tools?: string[]
-  availability?: string
-  profile_complete?: boolean
-  [key: string]: unknown
 }
 
-interface Company {
+interface Company extends Partial<DBCompany> {
   id: string
   user_id: string
-  name?: string
-  email_domain?: string
-  [key: string]: unknown
 }
 
 interface AuthContextType {
@@ -272,8 +266,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('users')
       .insert({
         id: user.id,
-        email: user.email,
-        role: role
+        email: user.email!,
+        role: role as Enums<'user_type'>
       })
 
     if (error) {
@@ -293,12 +287,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('No authenticated user') }
     }
 
+    // Build the insert data with required fields
+    const insertData: TablesInsert<'profiles'> = {
+      user_id: user.id,
+      email: profileData.email || user.email!,
+      first_name: profileData.first_name || '',
+      last_name: profileData.last_name || '',
+      ...(profileData.headline && { headline: profileData.headline }),
+      ...(profileData.role_type && { role_type: profileData.role_type as Enums<'role_category'> }),
+      ...(profileData.ai_tools && { ai_tools: profileData.ai_tools }),
+      ...(profileData.availability && { availability: profileData.availability as Enums<'availability_status'> }),
+      ...(profileData.profile_complete !== undefined && { profile_complete: profileData.profile_complete }),
+      ...(profileData.location && { location: profileData.location }),
+      ...(profileData.linkedin_url && { linkedin_url: profileData.linkedin_url }),
+    }
+
     const { data, error } = await supabase
       .from('profiles')
-      .insert({
-        user_id: user.id,
-        ...profileData
-      })
+      .insert(insertData)
       .select()
       .single()
 
@@ -319,9 +325,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('No profile to update') }
     }
 
+    // Build update data with proper enum casting
+    const updateData: TablesUpdate<'profiles'> = {}
+    if (profileData.first_name !== undefined) updateData.first_name = profileData.first_name
+    if (profileData.last_name !== undefined) updateData.last_name = profileData.last_name
+    if (profileData.email !== undefined) updateData.email = profileData.email
+    if (profileData.headline !== undefined) updateData.headline = profileData.headline
+    if (profileData.role_type !== undefined) updateData.role_type = profileData.role_type as Enums<'role_category'>
+    if (profileData.ai_tools !== undefined) updateData.ai_tools = profileData.ai_tools
+    if (profileData.availability !== undefined) updateData.availability = profileData.availability as Enums<'availability_status'>
+    if (profileData.profile_complete !== undefined) updateData.profile_complete = profileData.profile_complete
+    if (profileData.location !== undefined) updateData.location = profileData.location
+    if (profileData.linkedin_url !== undefined) updateData.linkedin_url = profileData.linkedin_url
+
     const { data, error } = await supabase
       .from('profiles')
-      .update(profileData)
+      .update(updateData)
       .eq('id', profile.id)
       .select()
       .single()
@@ -343,13 +362,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('No authenticated user') }
     }
 
+    // Get email domain from user email
+    const emailDomain = companyData.email_domain || user.email?.split('@')[1] || ''
+
+    // Build insert data with required fields
+    const insertData: TablesInsert<'companies'> = {
+      user_id: user.id,
+      name: companyData.name || '',
+      email_domain: emailDomain,
+      ...(companyData.description && { description: companyData.description }),
+      ...(companyData.website && { website: companyData.website }),
+      ...(companyData.logo_url && { logo_url: companyData.logo_url }),
+      ...(companyData.company_size && { company_size: companyData.company_size }),
+      ...(companyData.industry && { industry: companyData.industry }),
+      ...(companyData.headquarters && { headquarters: companyData.headquarters }),
+      ...(companyData.remote_policy && { remote_policy: companyData.remote_policy }),
+      ...(companyData.ai_culture && { ai_culture: companyData.ai_culture }),
+      ...(companyData.ai_tools_used && { ai_tools_used: companyData.ai_tools_used }),
+    }
+
     const { data, error } = await supabase
       .from('companies')
-      .insert({
-        user_id: user.id,
-        email_domain: user.email?.split('@')[1],
-        ...companyData
-      })
+      .insert(insertData)
       .select()
       .single()
 
