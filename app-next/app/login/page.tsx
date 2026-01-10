@@ -127,15 +127,6 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
-
-            {/* Dev hint for test accounts */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-6 p-3 rounded-lg bg-[var(--color-bg-tertiary)] text-xs text-[var(--color-text-muted)]">
-                <strong>Test account:</strong><br />
-                Email: test@example.com<br />
-                Password: testpass123
-              </div>
-            )}
           </div>
         </div>
       </main>
