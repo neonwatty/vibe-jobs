@@ -1,6 +1,6 @@
 # Vibe Jobs - Development Commands
 
-.PHONY: dev build start test test-watch test-coverage lint lint-fix typecheck knip check validate
+.PHONY: dev build start test test-watch test-coverage test-e2e test-e2e-ui test-e2e-headed lint lint-fix typecheck knip check validate
 
 # Development
 dev:
@@ -21,6 +21,16 @@ test-watch:
 
 test-coverage:
 	npm run test:coverage
+
+# E2E Testing
+test-e2e:
+	npm run test:e2e
+
+test-e2e-ui:
+	npm run test:e2e:ui
+
+test-e2e-headed:
+	npm run test:e2e:headed
 
 # Code Quality
 lint:
