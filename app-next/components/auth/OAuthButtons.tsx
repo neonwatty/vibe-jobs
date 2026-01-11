@@ -4,9 +4,10 @@ import { useAuth } from '@/contexts/AuthContext'
 
 interface OAuthButtonsProps {
   mode?: 'login' | 'signup'
+  role?: 'employee' | 'employer'
 }
 
-export default function OAuthButtons({ mode = 'login' }: OAuthButtonsProps) {
+export default function OAuthButtons({ mode = 'login', role }: OAuthButtonsProps) {
   const { signInWithGoogle, signInWithGitHub, loading } = useAuth()
 
   const actionText = mode === 'signup' ? 'Sign up' : 'Continue'
@@ -14,7 +15,7 @@ export default function OAuthButtons({ mode = 'login' }: OAuthButtonsProps) {
   return (
     <div className="space-y-3">
       <button
-        onClick={() => signInWithGoogle()}
+        onClick={() => signInWithGoogle(role)}
         disabled={loading}
         className="btn btn-secondary w-full flex items-center justify-center gap-3"
       >
@@ -40,7 +41,7 @@ export default function OAuthButtons({ mode = 'login' }: OAuthButtonsProps) {
       </button>
 
       <button
-        onClick={() => signInWithGitHub()}
+        onClick={() => signInWithGitHub(role)}
         disabled={loading}
         className="btn btn-secondary w-full flex items-center justify-center gap-3"
       >
