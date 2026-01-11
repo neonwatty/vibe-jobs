@@ -11,6 +11,9 @@
 | `make dev` | Start dev server |
 | `make build` | Build for production |
 | `make test` | Run unit tests |
+| `make test-e2e` | Run Playwright E2E tests |
+| `make test-e2e-ui` | Run E2E tests with Playwright UI |
+| `make test-e2e-headed` | Run E2E tests in headed browser |
 | `make lint` | Run ESLint |
 | `make knip` | Find dead code/unused exports |
 | `make typecheck` | TypeScript check |
@@ -55,6 +58,17 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
+
+## Test Accounts (E2E Testing)
+
+These accounts are created in Supabase for E2E testing:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Employer | test-employer@aistartup.com | password123 |
+| Employee | test-employee@example.com | password123 |
+
+**Note:** These are test accounts for the production Supabase instance. Do not use for real data.
 
 ## Notes
 

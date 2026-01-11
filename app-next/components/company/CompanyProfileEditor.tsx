@@ -68,6 +68,13 @@ export default function CompanyProfileEditor() {
     setError(null)
     setSuccess(false)
 
+    // Guard: Check if user is authenticated
+    if (!user) {
+      setError('You must be logged in to save your company profile')
+      setSaving(false)
+      return
+    }
+
     try {
       const companyData = {
         name: formData.name,
@@ -80,20 +87,36 @@ export default function CompanyProfileEditor() {
         description: formData.description || undefined,
         ai_culture: formData.ai_culture || undefined,
         ai_tools_used: formData.ai_tools_used,
-        email_domain: user?.email?.split('@')[1] || '',
+        email_domain: user.email?.split('@')[1] || '',
       }
 
       if (company) {
         const result = await updateCompany(companyData)
-        if (result.error) throw result.error
+        if (result.error) {
+          // Extract error message from Supabase error
+          const errorMessage = typeof result.error === 'object' && 'message' in result.error
+            ? (result.error as { message: string }).message
+            : String(result.error)
+          throw new Error(errorMessage)
+        }
       } else {
         const result = await createCompany(companyData)
-        if (result.error) throw result.error
+        if (result.error) {
+          // Extract error message from Supabase error
+          const errorMessage = typeof result.error === 'object' && 'message' in result.error
+            ? (result.error as { message: string }).message
+            : String(result.error)
+          throw new Error(errorMessage)
+        }
       }
 
       setSuccess(true)
     } catch (err) {
-      setError((err as Error).message || 'Failed to save company profile')
+      console.error('Company profile save error:', err)
+      const errorMessage = err instanceof Error
+        ? err.message
+        : 'Failed to save company profile. Please try again.'
+      setError(errorMessage)
     } finally {
       setSaving(false)
     }
