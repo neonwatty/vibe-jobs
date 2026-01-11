@@ -25,8 +25,12 @@ setup('authenticate as employer', async ({ page }) => {
   // Wait for redirect to employer dashboard
   await page.waitForURL('/company**', { timeout: 10000 })
 
-  // Verify we're logged in by checking for the dashboard
-  await expect(page.locator('text=Dashboard').first()).toBeVisible({ timeout: 5000 })
+  // Verify we're on the EMPLOYER dashboard (not generic dashboard)
+  // Look for employer-specific navigation link (use nav selector to avoid matching dashboard card)
+  await expect(page.locator('nav a[href="/company/jobs"]')).toBeVisible({ timeout: 10000 })
+
+  // Also verify we see "Employer Dashboard" heading
+  await expect(page.locator('h1:has-text("Employer Dashboard")')).toBeVisible({ timeout: 5000 })
 
   // Save the authentication state
   await page.context().storageState({ path: EMPLOYER_AUTH_FILE })
