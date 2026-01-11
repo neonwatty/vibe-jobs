@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import OAuthButtons from '@/components/auth/OAuthButtons'
 import { isBlockedDomain } from '@/lib/constants'
@@ -15,14 +15,36 @@ interface SignupError {
   message: string
 }
 
-export default function SignupPage() {
+function SignupContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, userRole, isAuthenticated, createUserRecord } = useAuth()
 
-  const [step, setStep] = useState<Step>('role')
+  // Check for blocked domain error from server-side redirect on initial render
+  const initialError = useMemo(() => {
+    const errorParam = searchParams.get('error')
+    const emailParam = searchParams.get('email')
+
+    if (errorParam === 'blocked_domain') {
+      return {
+        email: emailParam || undefined,
+        message: 'Please use your work email to sign up as an employer. Personal email addresses (Gmail, Yahoo, etc.) are not accepted.'
+      }
+    }
+    return null
+  }, [searchParams])
+
+  const [step, setStep] = useState<Step>(initialError ? 'error' : 'role')
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
-  const [error, setError] = useState<SignupError | null>(null)
+  const [error, setError] = useState<SignupError | null>(initialError)
   const [isCreatingUser, setIsCreatingUser] = useState(false)
+
+  // Clear URL params if we had an error
+  useEffect(() => {
+    if (initialError) {
+      router.replace('/signup', { scroll: false })
+    }
+  }, [initialError, router])
 
   // Handle post-OAuth user creation
   useEffect(() => {
@@ -197,7 +219,7 @@ export default function SignupPage() {
                 </div>
               )}
 
-              <OAuthButtons mode="signup" />
+              <OAuthButtons mode="signup" role={selectedRole || undefined} />
 
               <p className="text-xs text-center text-[var(--color-text-muted)] mt-6">
                 By signing up, you agree to our Terms of Service and Privacy Policy
@@ -258,5 +280,17 @@ export default function SignupPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-grid flex items-center justify-center">
+        <div className="animate-pulse text-[var(--color-text-muted)]">Loading...</div>
+      </div>
+    }>
+      <SignupContent />
+    </Suspense>
   )
 }
