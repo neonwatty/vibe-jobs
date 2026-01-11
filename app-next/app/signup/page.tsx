@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -15,7 +15,7 @@ interface SignupError {
   message: string
 }
 
-export default function SignupPage() {
+function SignupContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, userRole, isAuthenticated, createUserRecord } = useAuth()
@@ -280,5 +280,17 @@ export default function SignupPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-grid flex items-center justify-center">
+        <div className="animate-pulse text-[var(--color-text-muted)]">Loading...</div>
+      </div>
+    }>
+      <SignupContent />
+    </Suspense>
   )
 }
