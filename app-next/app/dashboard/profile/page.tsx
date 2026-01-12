@@ -8,42 +8,29 @@ import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { loading, isAuthenticated, isEmployee } = useAuth()
+  const { loading, isAuthenticated, isEmployee, userRole } = useAuth()
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/login?redirect=/dashboard/profile')
     }
-    if (!loading && isAuthenticated && !isEmployee) {
+    // Only redirect to company if we know the role and it's employer
+    if (!loading && isAuthenticated && userRole && !isEmployee) {
       router.push('/company')
     }
-  }, [loading, isAuthenticated, isEmployee, router])
+  }, [loading, isAuthenticated, isEmployee, userRole, router])
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-2xl">
-          <div className="animate-pulse">
-            <div className="h-8 bg-[var(--color-bg-tertiary)] rounded w-1/3 mb-2" />
-            <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-1/2 mb-8" />
-            <div className="card">
-              <div className="h-6 bg-[var(--color-bg-tertiary)] rounded w-1/4 mb-4" />
-              <div className="space-y-4">
-                <div className="h-12 bg-[var(--color-bg-tertiary)] rounded" />
-                <div className="h-12 bg-[var(--color-bg-tertiary)] rounded" />
-                <div className="h-12 bg-[var(--color-bg-tertiary)] rounded" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
-  if (!isAuthenticated || !isEmployee) {
+  // Don't render anything if not authenticated (will redirect)
+  if (!loading && !isAuthenticated) {
     return null
   }
 
+  // If authenticated but role determined to be employer, don't render
+  if (!loading && userRole && !isEmployee) {
+    return null
+  }
+
+  // Render content - ProfileEditor handles its own loading state
   return (
     <DashboardLayout>
       <div className="max-w-2xl">
