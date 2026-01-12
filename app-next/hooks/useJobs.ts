@@ -406,6 +406,14 @@ export function useApplications(profileId: string | null | undefined) {
       if (applyError) throw applyError
 
       setAppliedJobIds(prev => new Set([...prev, jobId]))
+
+      // Send email notification to employer (fire and forget)
+      fetch('/api/email/new-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: data.id }),
+      }).catch(err => console.error('Email notification failed:', err))
+
       return data
     } catch (err) {
       console.error('Error applying to job:', err)
