@@ -13,7 +13,8 @@ const TEST_EMPLOYER = {
 }
 
 const TEST_EMPLOYEE = {
-  email: 'test-employee@example.com',
+  // Use existing seeded employee account from supabase/seed.sql
+  email: 'alex.chen@example.com',
   password: 'password123',
 }
 
@@ -75,7 +76,7 @@ setup('authenticate as employee', async ({ page }) => {
     // Account doesn't exist - skip this setup
     // Tests using employee auth will be skipped
     console.log('Employee test account does not exist. Skipping employee auth setup.')
-    console.log('Create the account in Supabase: test-employee@example.com / password123')
+    console.log('Run seed.sql or create: alex.chen@example.com / password123')
     test.skip()
     return
   }

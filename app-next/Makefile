@@ -2,15 +2,15 @@
 
 .PHONY: dev build start test test-watch test-coverage test-e2e test-e2e-ui test-e2e-headed lint lint-fix typecheck knip check validate
 
-# Development
+# Development (uses Doppler for secrets)
 dev:
-	npm run dev
+	doppler run -- npm run dev
 
 build:
-	npm run build
+	doppler run -- npm run build
 
 start:
-	npm run start
+	doppler run -- npm run start
 
 # Testing
 test:
@@ -22,15 +22,15 @@ test-watch:
 test-coverage:
 	npm run test:coverage
 
-# E2E Testing
+# E2E Testing (uses Doppler for secrets)
 test-e2e:
-	npm run test:e2e
+	doppler run -- npm run test:e2e
 
 test-e2e-ui:
-	npm run test:e2e:ui
+	doppler run -- npm run test:e2e:ui
 
 test-e2e-headed:
-	npm run test:e2e:headed
+	doppler run -- npm run test:e2e:headed
 
 # Code Quality
 lint:

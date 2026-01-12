@@ -51,24 +51,35 @@ app-next/
 └── .github/workflows/     # CI/CD workflows
 ```
 
-## Environment Variables
+## Secrets Management (Doppler)
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+This project uses [Doppler](https://doppler.com) for secrets management. No secrets are stored locally.
+
+**Setup:**
+```bash
+# One-time setup (if not already configured)
+doppler login
+doppler setup --project vibe-jobs --config dev
 ```
+
+**Environment Variables (managed in Doppler):**
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon key (public)
+- `NEXT_PUBLIC_SITE_URL` - Site URL for OAuth redirects
+- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (admin operations)
+
+The Makefile commands automatically use `doppler run` to inject secrets.
 
 ## Test Accounts (E2E Testing)
 
-These accounts are created in Supabase for E2E testing:
+These accounts are created via `supabase/seed.sql` for E2E testing:
 
 | Role | Email | Password |
 |------|-------|----------|
 | Employer | test-employer@aistartup.com | password123 |
-| Employee | test-employee@example.com | password123 |
+| Employee | alex.chen@example.com | password123 |
 
-**Note:** These are test accounts for the production Supabase instance. Do not use for real data.
+**Note:** Run `supabase db reset` to seed the database with test data.
 
 ## Notes
 

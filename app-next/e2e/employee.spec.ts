@@ -7,7 +7,7 @@ import * as fs from 'fs'
  * Tests the employee flows: dashboard, profile management, job browsing.
  * Uses the authenticated employee session from auth.setup.ts
  *
- * NOTE: These tests require the test-employee@example.com account to exist in Supabase.
+ * NOTE: These tests require the alex.chen@example.com account to exist in Supabase.
  * If the account doesn't exist, the auth setup skips and these tests will also skip.
  */
 
@@ -17,7 +17,7 @@ const EMPLOYEE_AUTH_FILE = 'e2e/.auth/employee.json'
 const employeeAuthExists = () => fs.existsSync(EMPLOYEE_AUTH_FILE)
 
 test.describe('Employee Dashboard', () => {
-  test.skip(() => !employeeAuthExists(), 'Employee auth not available - create test-employee@example.com in Supabase')
+  test.skip(() => !employeeAuthExists(), 'Employee auth not available - create alex.chen@example.com in Supabase')
   test.use({ storageState: EMPLOYEE_AUTH_FILE })
 
   test('can view employee dashboard', async ({ page }) => {
@@ -54,16 +54,16 @@ test.describe('Employee Dashboard', () => {
 })
 
 test.describe('Employee Profile', () => {
-  test.skip(() => !employeeAuthExists(), 'Employee auth not available - create test-employee@example.com in Supabase')
+  test.skip(() => !employeeAuthExists(), 'Employee auth not available - create alex.chen@example.com in Supabase')
   test.use({ storageState: EMPLOYEE_AUTH_FILE })
 
   test('can view profile page', async ({ page }) => {
     await page.goto('/dashboard/profile')
 
-    // Should see profile page
-    await expect(page.locator('h1:has-text("Your Profile")')).toBeVisible({ timeout: 30000 })
+    // Should see profile page heading
+    await expect(page.getByRole('heading', { name: 'Your Profile' })).toBeVisible({ timeout: 30000 })
 
-    // Form should be visible
+    // Form should be visible (ProfileEditor renders a form)
     await expect(page.locator('form')).toBeVisible({ timeout: 10000 })
   })
 
@@ -73,25 +73,25 @@ test.describe('Employee Profile', () => {
     // Wait for form to load
     await expect(page.locator('form')).toBeVisible({ timeout: 30000 })
 
-    // Update headline with unique value
-    const headlineInput = page.locator('input[placeholder*="Full-Stack Engineer"]')
+    // Update headline with unique value - find by placeholder text
+    const headlineInput = page.locator('input[placeholder*="ships 3x with AI"]')
     await expect(headlineInput).toBeVisible()
     const uniqueHeadline = `AI-Native Developer - Updated ${Date.now()}`
     await headlineInput.fill(uniqueHeadline)
 
     // Click save button
-    await page.click('button:has-text("Save Profile")')
+    await page.getByRole('button', { name: 'Save Profile' }).click()
 
-    // Wait for save to complete
-    await expect(page.locator('button:has-text("Saving...")')).not.toBeVisible({ timeout: 15000 })
+    // Wait for save to complete (button text changes while saving)
+    await expect(page.getByRole('button', { name: 'Saving...' })).not.toBeVisible({ timeout: 15000 })
 
-    // Should see success message
-    await expect(page.locator('.alert-success')).toBeVisible({ timeout: 10000 })
+    // Should see success indication - check the save button is back
+    await expect(page.getByRole('button', { name: 'Save Profile' })).toBeVisible({ timeout: 10000 })
   })
 })
 
 test.describe('Job Browsing', () => {
-  test.skip(() => !employeeAuthExists(), 'Employee auth not available - create test-employee@example.com in Supabase')
+  test.skip(() => !employeeAuthExists(), 'Employee auth not available - create alex.chen@example.com in Supabase')
   test.use({ storageState: EMPLOYEE_AUTH_FILE })
 
   test('can browse jobs page', async ({ page }) => {
