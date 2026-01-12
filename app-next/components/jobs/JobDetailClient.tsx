@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useJob, useSavedJobs, useApplications } from '@/hooks/useJobs'
@@ -362,9 +363,15 @@ export default function JobDetailClient({ jobId, initialJob }: JobDetailClientPr
             {/* Company Card */}
             <div className="card">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-xl bg-[var(--color-accent)] flex items-center justify-center text-xl font-bold text-[var(--color-bg-primary)]">
+                <div className="w-14 h-14 rounded-xl bg-[var(--color-accent)] flex items-center justify-center text-xl font-bold text-[var(--color-bg-primary)] relative overflow-hidden">
                   {company?.logo_url ? (
-                    <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover rounded-xl" />
+                    <Image
+                      src={company.logo_url}
+                      alt={company.name || 'Company logo'}
+                      fill
+                      className="object-cover rounded-xl"
+                      unoptimized
+                    />
                   ) : (
                     company?.name?.[0]
                   )}

@@ -1,9 +1,12 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
 import type { Tables, TablesInsert, TablesUpdate, Enums } from '@/lib/database.types'
+
+// Create supabase client at module level to avoid recreating on each render
+const supabase = createClient()
 
 // Use database types for Profile and Company
 type DBProfile = Tables<'profiles'>
@@ -107,42 +110,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  /**
+   * Refresh company data in background (used after cache hit)
+   */
+  const refreshCompanyData = useCallback(async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchUserData(session.user.id)
-      } else {
-        setLoading(false)
+      if (data) {
+        setCompany(data as Company)
+        setCachedCompany(userId, data as Company)
       }
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          await fetchUserData(session.user.id)
-        } else {
-          setUserRole(null)
-          setProfile(null)
-          setCompany(null)
-          setLoading(false)
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
+    } catch {
+      // Ignore refresh errors
+    }
   }, [])
 
   /**
    * Fetch user role and associated data (profile or company)
    * Uses localStorage cache for company data to improve load times
    */
-  async function fetchUserData(userId: string) {
+  const fetchUserData = useCallback(async (userId: string) => {
     try {
       // Check for cached company data first (for employers)
       const cachedCompany = getCachedCompany(userId)
@@ -190,27 +182,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [refreshCompanyData])
 
-  /**
-   * Refresh company data in background (used after cache hit)
-   */
-  async function refreshCompanyData(userId: string) {
-    try {
-      const { data } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
-
-      if (data) {
-        setCompany(data as Company)
-        setCachedCompany(userId, data as Company)
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        fetchUserData(session.user.id)
+      } else {
+        setLoading(false)
       }
-    } catch {
-      // Ignore refresh errors
-    }
-  }
+    })
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          await fetchUserData(session.user.id)
+        } else {
+          setUserRole(null)
+          setProfile(null)
+          setCompany(null)
+          setLoading(false)
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [fetchUserData])
 
   /**
    * Sign in with Google OAuth
