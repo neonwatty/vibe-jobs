@@ -42,6 +42,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { path: '/company/jobs', label: 'Manage Jobs' },
     { path: '/company/jobs/new', label: 'Post Job' },
     { path: '/talent', label: 'Browse Talent' },
+    { path: '/company/analytics', label: 'Analytics' },
     { path: '/company/profile', label: 'Company' },
     { path: '/company/mcp', label: 'MCP Access' },
   ]

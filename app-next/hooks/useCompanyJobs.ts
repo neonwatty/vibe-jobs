@@ -220,6 +220,10 @@ export function useJobApplications(jobId: string | null, companyId: string | nul
     status: Enums<'application_status'>,
     notes?: string
   ) => {
+    // Get the current status before updating
+    const currentApp = applications.find(app => app.id === applicationId)
+    const oldStatus = currentApp?.status || 'pending'
+
     const updates: TablesUpdate<'applications'> = { status }
     if (notes !== undefined) {
       updates.employer_notes = notes
@@ -237,6 +241,16 @@ export function useJobApplications(jobId: string | null, companyId: string | nul
     setApplications(prev =>
       prev.map(app => app.id === applicationId ? { ...app, ...data } as JobApplication : app)
     )
+
+    // Send email notification to applicant (fire and forget)
+    if (oldStatus !== status) {
+      fetch('/api/email/status-change', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId, oldStatus, newStatus: status }),
+      }).catch(err => console.error('Email notification failed:', err))
+    }
+
     return data
   }
 
