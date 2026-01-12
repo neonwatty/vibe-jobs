@@ -109,6 +109,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, typecheck, test, knip]
     steps:
+      - uses: actions/checkout@v4
+
       - name: Check for Doppler token
         id: check-token
         run: |
@@ -118,9 +120,6 @@ jobs:
           else
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
-
-      - uses: actions/checkout@v4
-        if: steps.check-token.outputs.skip != 'true'
 
       - name: Setup Node.js
         if: steps.check-token.outputs.skip != 'true'
