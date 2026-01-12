@@ -45,10 +45,11 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    /* Setup project for authentication */
+    /* Setup project for authentication - needs longer timeout for CI */
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
+      timeout: 120000, // 2 minutes for auth setup in CI
     },
 
     {

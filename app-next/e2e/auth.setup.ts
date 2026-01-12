@@ -37,15 +37,18 @@ setup('authenticate as employer', async ({ page }) => {
     return
   }
 
-  // Go to login page
-  await page.goto('/login')
+  // Go to login page with retry logic for CI
+  console.log('Navigating to login page...')
+  await page.goto('/login', { waitUntil: 'domcontentloaded', timeout: 30000 })
 
   // Wait for the login form to be fully rendered
-  await page.waitForLoadState('networkidle')
+  console.log('Waiting for page to be ready...')
+  await page.waitForLoadState('networkidle', { timeout: 30000 })
 
   // Wait for the email input to be visible and interactable
+  console.log('Looking for email input...')
   const emailInput = page.locator('input[type="email"]')
-  await expect(emailInput).toBeVisible({ timeout: 10000 })
+  await expect(emailInput).toBeVisible({ timeout: 30000 })
 
   // Clear and type credentials (instead of fill) to trigger React state updates
   await emailInput.click()
@@ -60,42 +63,36 @@ setup('authenticate as employer', async ({ page }) => {
   await passwordInput.pressSequentially(TEST_EMPLOYER.password, { delay: 10 })
 
   // Wait for the submit button to be visible and enabled
+  console.log('Looking for submit button...')
   const submitButton = page.getByRole('button', { name: 'Sign in with Email' })
-  await expect(submitButton).toBeVisible({ timeout: 5000 })
+  await expect(submitButton).toBeVisible({ timeout: 10000 })
   await expect(submitButton).toBeEnabled()
 
-  // Submit the form by pressing Enter (more reliable than clicking)
-  await passwordInput.press('Enter')
+  // Click the submit button and wait for response
+  console.log('Clicking submit button...')
+  await submitButton.click()
+  console.log('Waiting for login response...')
 
-  // Wait for button text to change (indicates submission started)
-  await page.waitForTimeout(500)
-  let buttonText = await submitButton.textContent()
-
-  // If button still shows "Sign in with Email", the click might not have registered
-  if (buttonText === 'Sign in with Email') {
-    // Try clicking again with force
-    await submitButton.click({ force: true })
-    await page.waitForTimeout(500)
-    buttonText = await submitButton.textContent()
-  }
-
-  // Check for specific error messages (not empty alerts from dev tools)
+  // Wait for either navigation (success) or error message (failure)
   const loginError = page.locator('text=Invalid login credentials')
-  const genericError = page.locator('.alert-error:has-text("")')
 
   try {
-    // Wait for navigation to happen
-    await page.waitForURL((url) => url.pathname !== '/login', { timeout: 30000 })
-  } catch {
-    // If navigation fails, check for errors
-    if (await loginError.isVisible({ timeout: 1000 }).catch(() => false)) {
-      throw new Error('Login failed: Invalid credentials. The test account may not exist in Supabase.')
+    // Race between successful navigation and error display
+    await Promise.race([
+      page.waitForURL((url) => url.pathname !== '/login', { timeout: 45000 }),
+      loginError.waitFor({ state: 'visible', timeout: 45000 }).then(() => {
+        throw new Error('Login failed: Invalid credentials. The test account may not exist in Supabase.')
+      })
+    ])
+  } catch (err) {
+    // Re-throw credential errors
+    if (err instanceof Error && err.message.includes('Invalid credentials')) {
+      throw err
     }
-    if (await genericError.isVisible({ timeout: 1000 }).catch(() => false)) {
-      const errorText = await genericError.textContent()
-      throw new Error(`Login failed with error: ${errorText}`)
-    }
-    throw new Error(`Login did not redirect. Current URL: ${page.url()}. Button text: ${buttonText}`)
+    // For timeout errors, provide more context
+    const currentUrl = page.url()
+    console.error('Login timeout. Current URL:', currentUrl)
+    throw new Error(`Login did not complete within timeout. Current URL: ${currentUrl}`)
   }
 
   // Wait for redirect to employer dashboard
