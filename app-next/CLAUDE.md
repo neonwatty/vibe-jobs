@@ -70,6 +70,30 @@ These accounts are created in Supabase for E2E testing:
 
 **Note:** These are test accounts for the production Supabase instance. Do not use for real data.
 
+## Secrets Management (Doppler)
+
+This project uses [Doppler](https://doppler.com) for secrets management.
+
+### Local Development
+
+```bash
+# Run commands with Doppler-injected secrets
+doppler run -- npm run dev
+doppler run -- npm run test:e2e
+```
+
+### CI/CD Integration
+
+E2E tests run in GitHub Actions using Doppler to inject secrets.
+
+**Required GitHub Secrets:**
+- `DOPPLER_TOKEN` - Service token for CI (create with `doppler configs tokens create ci-token --config dev`)
+
+**Setup Steps:**
+1. Create a Doppler service token: `doppler configs tokens create ci-token --config dev`
+2. Add `DOPPLER_TOKEN` to GitHub repo secrets (Settings → Secrets → Actions)
+3. E2E tests will automatically run on PRs when the token is available
+
 ## Notes
 
 - OAuth providers: Google, GitHub (configured in Supabase)
