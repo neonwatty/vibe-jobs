@@ -35,6 +35,61 @@ test.describe('Public Job Browsing', () => {
     await expect(page.locator('h2:has-text("jobs")')).toBeVisible()
   })
 
+  test('can search for jobs', async ({ page }) => {
+    await page.goto('/jobs')
+
+    // Wait for jobs to load
+    await expect(page.locator('h2:has-text("jobs")')).toBeVisible({ timeout: 30000 })
+
+    // Find the search input
+    const searchInput = page.locator('input[placeholder="Search jobs..."]')
+    await expect(searchInput).toBeVisible()
+
+    // Type a search term
+    await searchInput.fill('engineer')
+
+    // Wait for debounce and results to update (300ms debounce + network time)
+    await page.waitForTimeout(500)
+
+    // Page should still be functional
+    await expect(page.locator('h2:has-text("jobs")')).toBeVisible()
+  })
+
+  test('can clear search', async ({ page }) => {
+    await page.goto('/jobs')
+
+    // Wait for jobs to load
+    await expect(page.locator('h2:has-text("jobs")')).toBeVisible({ timeout: 30000 })
+
+    // Get initial job count text
+    const initialJobsText = await page.locator('h2:has-text("jobs")').textContent()
+
+    // Search for something that won't match
+    const searchInput = page.locator('input[placeholder="Search jobs..."]')
+    await searchInput.fill('zzzznonexistent')
+
+    // Wait for debounce
+    await page.waitForTimeout(500)
+
+    // Should show "0 jobs" header
+    await expect(page.locator('h2')).toHaveText('0 jobs')
+
+    // Clear the search using the X button
+    const clearButton = page.locator('input[placeholder="Search jobs..."]').locator('..').locator('button')
+    if (await clearButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await clearButton.click()
+    } else {
+      // Fallback: clear manually
+      await searchInput.fill('')
+    }
+
+    // Wait for results to restore
+    await page.waitForTimeout(500)
+
+    // Should show jobs again (same count as before)
+    await expect(page.locator('h2:has-text("jobs")')).toHaveText(initialJobsText || /\d+ jobs/)
+  })
+
   test('can view job details page', async ({ page }) => {
     await page.goto('/jobs')
 

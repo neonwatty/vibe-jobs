@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 
 const ROLE_TYPES = [
   { value: 'engineer', label: 'Engineering' },
@@ -44,11 +45,18 @@ export default function ProfileEditor() {
     role_type: profile?.role_type || 'engineer',
     availability: profile?.availability || 'open',
     ai_tools: profile?.ai_tools || [],
+    resume_file_url: profile?.resume_file_url || '',
   })
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [uploadingResume, setUploadingResume] = useState(false)
+  const [resumeError, setResumeError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const ALLOWED_FILE_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
   const handleChange = (field: string, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -60,6 +68,106 @@ export default function ProfileEditor() {
       ? formData.ai_tools.filter(t => t !== tool)
       : [...formData.ai_tools, tool]
     handleChange('ai_tools', newTools)
+  }
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setResumeError(null)
+
+    // Validate file type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      setResumeError('Please upload a PDF or Word document (.pdf, .doc, .docx)')
+      return
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setResumeError('File size must be less than 5MB')
+      return
+    }
+
+    setUploadingResume(true)
+
+    try {
+      const supabase = createClient()
+
+      // Get the current user ID
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      // Create a unique file name
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}/resume-${Date.now()}.${fileExt}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+        })
+
+      if (uploadError) {
+        // If bucket doesn't exist, show a helpful error
+        if (uploadError.message.includes('Bucket not found')) {
+          throw new Error('Resume storage not configured. Please contact support.')
+        }
+        throw uploadError
+      }
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('resumes')
+        .getPublicUrl(fileName)
+
+      // Update form data
+      handleChange('resume_file_url', publicUrl)
+    } catch (err) {
+      setResumeError((err as Error).message || 'Failed to upload resume')
+    } finally {
+      setUploadingResume(false)
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
+  const handleResumeDelete = async () => {
+    if (!formData.resume_file_url) return
+
+    try {
+      const supabase = createClient()
+
+      // Extract the file path from the URL
+      const url = new URL(formData.resume_file_url)
+      const pathParts = url.pathname.split('/storage/v1/object/public/resumes/')
+      if (pathParts.length > 1) {
+        const filePath = pathParts[1]
+        await supabase.storage.from('resumes').remove([filePath])
+      }
+
+      // Clear the URL from form data
+      handleChange('resume_file_url', '')
+    } catch (err) {
+      console.error('Error deleting resume:', err)
+      // Still clear the URL even if delete fails
+      handleChange('resume_file_url', '')
+    }
+  }
+
+  const getResumeFileName = (url: string): string => {
+    try {
+      const urlObj = new URL(url)
+      const path = urlObj.pathname
+      const fileName = path.split('/').pop() || 'resume'
+      // Remove the timestamp prefix if present
+      return fileName.replace(/^resume-\d+-/, 'resume.')
+    } catch {
+      return 'resume'
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,6 +187,7 @@ export default function ProfileEditor() {
         role_type: formData.role_type,
         availability: formData.availability,
         ai_tools: formData.ai_tools,
+        resume_file_url: formData.resume_file_url || undefined,
         profile_complete: true,
       }
 
@@ -286,6 +395,90 @@ export default function ProfileEditor() {
           <p className="text-sm text-[var(--color-text-muted)] mt-4">
             {formData.ai_tools.length} tool{formData.ai_tools.length > 1 ? 's' : ''} selected
           </p>
+        )}
+      </div>
+
+      {/* Resume Upload */}
+      <div className="card">
+        <h2 className="text-lg font-semibold mb-2">Resume</h2>
+        <p className="text-sm text-[var(--color-text-muted)] mb-4">
+          Upload your resume to share with employers. Accepted formats: PDF, DOC, DOCX (max 5MB).
+        </p>
+
+        {resumeError && (
+          <div className="alert alert-error mb-4">{resumeError}</div>
+        )}
+
+        {formData.resume_file_url ? (
+          <div className="flex items-center gap-4 p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
+            <div className="w-10 h-10 bg-[var(--color-accent)]/10 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-[var(--color-text-primary)] truncate">
+                {getResumeFileName(formData.resume_file_url)}
+              </p>
+              <p className="text-sm text-[var(--color-text-muted)]">Resume uploaded</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href={formData.resume_file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-ghost btn-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download
+              </a>
+              <button
+                type="button"
+                onClick={handleResumeDelete}
+                className="btn btn-ghost btn-sm text-red-500 hover:text-red-400"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="relative">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={handleResumeUpload}
+              disabled={uploadingResume}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+            />
+            <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              uploadingResume
+                ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
+                : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)]'
+            }`}>
+              {uploadingResume ? (
+                <>
+                  <div className="spinner w-8 h-8 mx-auto mb-3" />
+                  <p className="text-[var(--color-text-primary)]">Uploading...</p>
+                </>
+              ) : (
+                <>
+                  <svg className="w-10 h-10 text-[var(--color-text-muted)] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p className="text-[var(--color-text-primary)] mb-1">
+                    <span className="text-[var(--color-accent)] font-medium">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-sm text-[var(--color-text-muted)]">PDF, DOC, or DOCX up to 5MB</p>
+                </>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
