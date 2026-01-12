@@ -76,8 +76,11 @@ interface JobEditorProps {
 
 export default function JobEditor({ initialData, mode = 'create' }: JobEditorProps) {
   const router = useRouter()
-  const { company } = useAuth()
+  const { company, loading: authLoading } = useAuth()
   const { createJob, updateJob } = useCompanyJobs(company?.id)
+
+  // Track if company data is ready for submission
+  const companyReady = !!company?.id
 
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
@@ -162,6 +165,13 @@ export default function JobEditor({ initialData, mode = 'create' }: JobEditorPro
     <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-6">
       {error && (
         <div className="alert alert-error">{error}</div>
+      )}
+
+      {/* Show loading indicator if company data is still loading */}
+      {authLoading && !companyReady && (
+        <div className="alert alert-info">
+          Loading company data...
+        </div>
       )}
 
       {/* Basic Info */}
@@ -449,16 +459,18 @@ export default function JobEditor({ initialData, mode = 'create' }: JobEditorPro
       <div className="flex justify-end gap-4">
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || !companyReady}
           className="btn btn-ghost"
+          title={!companyReady ? 'Waiting for company data to load...' : undefined}
         >
           {saving ? 'Saving...' : 'Save as Draft'}
         </button>
         <button
           type="button"
           onClick={(e) => handleSubmit(e, true)}
-          disabled={saving}
+          disabled={saving || !companyReady}
           className="btn btn-primary"
+          title={!companyReady ? 'Waiting for company data to load...' : undefined}
         >
           {saving ? (
             <>
