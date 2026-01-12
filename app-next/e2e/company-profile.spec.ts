@@ -21,9 +21,7 @@ test.describe('Company Profile', () => {
     await expect(page.locator('form')).toBeVisible({ timeout: 10000 })
   })
 
-  // TODO: Investigate and fix company profile save - currently save completes but no success/error alert appears
-  // This is tracked as a separate issue from the E2E test framework setup
-  test.skip('can edit company profile', async ({ page }) => {
+  test('can edit company profile', async ({ page }) => {
     await page.goto('/company/profile')
 
     // Wait for form to load
