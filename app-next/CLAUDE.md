@@ -54,10 +54,35 @@ app-next/
 ## Environment Variables
 
 ```env
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Email (Resend)
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+RESEND_FROM_EMAIL=notifications@vibejobs.com
 ```
+
+## Email Notifications
+
+Email notifications are sent via [Resend](https://resend.com) for the following events:
+
+| Event | Recipient | Trigger |
+|-------|-----------|---------|
+| New application | Employer | When employee applies to a job |
+| Status change | Applicant | When employer updates application status |
+
+**Setup:**
+1. Create a Resend account at https://resend.com
+2. Verify your domain (or use Resend's test domain for development)
+3. Add `RESEND_API_KEY` and `RESEND_FROM_EMAIL` to your environment
+
+**Templates:** Email templates are in `lib/email/templates.ts`
+
+**API Routes:**
+- `POST /api/email/new-application` - Notify employer of new application
+- `POST /api/email/status-change` - Notify applicant of status change
 
 ## Test Accounts (E2E Testing)
 

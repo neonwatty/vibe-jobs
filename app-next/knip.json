@@ -15,7 +15,8 @@
   ],
   "ignoreDependencies": [
     "@tailwindcss/postcss",
-    "tailwindcss"
+    "tailwindcss",
+    "resend"
   ],
   "next": {
     "entry": [
