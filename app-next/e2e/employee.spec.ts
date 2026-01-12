@@ -42,7 +42,7 @@ test.describe('Employee Dashboard', () => {
     await page.waitForURL('/jobs**')
 
     // Should see jobs page content
-    await expect(page.locator('h1:has-text("Find Your Next")')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('h2:has-text("jobs")')).toBeVisible({ timeout: 10000 })
   })
 
   test('can view applications page', async ({ page }) => {
@@ -98,17 +98,17 @@ test.describe('Job Browsing', () => {
     await page.goto('/jobs')
 
     // Should see jobs page
-    await expect(page.locator('h1:has-text("Find Your Next")')).toBeVisible({ timeout: 30000 })
+    await expect(page.locator('h2:has-text("jobs")')).toBeVisible({ timeout: 30000 })
 
-    // Should have search/filter elements
-    await expect(page.locator('input[placeholder*="Search"]')).toBeVisible()
+    // Should have sort dropdown
+    await expect(page.locator('select')).toBeVisible()
   })
 
   test('can filter jobs by category', async ({ page }) => {
     await page.goto('/jobs')
 
     // Wait for page to load
-    await expect(page.locator('h1:has-text("Find Your Next")')).toBeVisible({ timeout: 30000 })
+    await expect(page.locator('h2:has-text("jobs")')).toBeVisible({ timeout: 30000 })
 
     // Click on a role category filter if available
     const filterButton = page.locator('button:has-text("Engineering")').first()
@@ -116,7 +116,7 @@ test.describe('Job Browsing', () => {
       await filterButton.click()
 
       // Page should still be functional after filter
-      await expect(page.locator('h1:has-text("Find Your Next")')).toBeVisible()
+      await expect(page.locator('h2:has-text("jobs")')).toBeVisible()
     }
   })
 })
