@@ -32,6 +32,14 @@ setup('authenticate as employer', async ({ page }) => {
   // Also verify we see "Employer Dashboard" heading
   await expect(page.locator('h1:has-text("Employer Dashboard")')).toBeVisible({ timeout: 5000 })
 
-  // Save the authentication state
+  // Navigate to job posting page and wait for company data to load
+  // This ensures the company data is cached in localStorage for subsequent tests
+  await page.goto('/company/jobs/new')
+  await expect(page.locator('h1:has-text("Post a Job")')).toBeVisible({ timeout: 30000 })
+
+  // Wait for the form buttons to be enabled (indicates company data is loaded and cached)
+  await expect(page.locator('button:has-text("Save as Draft")')).toBeEnabled({ timeout: 30000 })
+
+  // Save the authentication state (includes localStorage with company cache)
   await page.context().storageState({ path: EMPLOYER_AUTH_FILE })
 })

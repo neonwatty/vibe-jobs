@@ -151,7 +151,7 @@ function JobRow({ job, onStatusChange, onDelete }: {
 
 export default function ManageJobsPage() {
   const router = useRouter()
-  const { loading: authLoading, isAuthenticated, isEmployer, company } = useAuth()
+  const { loading: authLoading, isAuthenticated, isEmployer, company, user } = useAuth()
 
   const {
     jobs,
@@ -163,6 +163,7 @@ export default function ManageJobsPage() {
 
   const [actionError, setActionError] = useState<string | null>(null)
 
+  // Redirect logic - only redirect when we're sure about auth state
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login?redirect=/company/jobs')
@@ -190,7 +191,8 @@ export default function ManageJobsPage() {
     }
   }
 
-  if (authLoading) {
+  // Show loading only when we don't have user info yet
+  if (authLoading && !user) {
     return (
       <DashboardLayout>
         <div className="max-w-4xl">
@@ -206,7 +208,8 @@ export default function ManageJobsPage() {
     )
   }
 
-  if (!isAuthenticated || !isEmployer) {
+  // Only block if we're sure user isn't authenticated or isn't employer
+  if (!authLoading && (!isAuthenticated || !isEmployer)) {
     return null
   }
 

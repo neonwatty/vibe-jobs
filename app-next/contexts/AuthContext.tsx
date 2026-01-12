@@ -57,6 +57,48 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+// Helper functions for localStorage caching
+const COMPANY_CACHE_KEY = 'vibejobs_company_cache'
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+function getCachedCompany(userId: string): Company | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const cached = localStorage.getItem(COMPANY_CACHE_KEY)
+    if (cached) {
+      const { data, userId: cachedUserId, timestamp } = JSON.parse(cached)
+      if (cachedUserId === userId && Date.now() - timestamp < CACHE_TTL) {
+        return data
+      }
+    }
+  } catch {
+    // Ignore cache errors
+  }
+  return null
+}
+
+function setCachedCompany(userId: string, data: Company | null) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(COMPANY_CACHE_KEY, JSON.stringify({
+      data,
+      userId,
+      timestamp: Date.now()
+    }))
+  } catch {
+    // Ignore cache errors
+  }
+}
+
+function clearCachedCompany() {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(COMPANY_CACHE_KEY)
+  } catch {
+    // Ignore cache errors
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
@@ -98,48 +140,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * Fetch user role and associated data (profile or company)
+   * Uses localStorage cache for company data to improve load times
    */
   async function fetchUserData(userId: string) {
     try {
-      // First, get the user's role
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', userId)
-        .single()
+      // Check for cached company data first (for employers)
+      const cachedCompany = getCachedCompany(userId)
+      if (cachedCompany) {
+        setCompany(cachedCompany)
+        setUserRole('employer')
+        setLoading(false)
+        // Refresh in background
+        refreshCompanyData(userId)
+        return
+      }
 
-      if (userError) {
+      // Fetch user role, profile, and company in parallel for speed
+      // Most users will only have one of profile/company, so the unused query returns null
+      const [userResult, profileResult, companyResult] = await Promise.all([
+        supabase.from('users').select('role').eq('id', userId).single(),
+        supabase.from('profiles').select('*').eq('user_id', userId).single(),
+        supabase.from('companies').select('*').eq('user_id', userId).single(),
+      ])
+
+      if (userResult.error) {
         // User record doesn't exist yet (new signup)
         setUserRole(null)
         setLoading(false)
         return
       }
 
-      setUserRole(userData.role)
+      const role = userResult.data.role
+      setUserRole(role)
 
-      // Fetch associated profile or company
-      if (userData.role === 'employee') {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single()
-
-        setProfile(profileData as Profile | null)
-      } else if (userData.role === 'employer') {
-        const { data: companyData } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('user_id', userId)
-          .single()
-
-        setCompany(companyData as Company | null)
+      // Set the appropriate data based on role
+      if (role === 'employee') {
+        setProfile(profileResult.data as Profile | null)
+      } else if (role === 'employer') {
+        const companyData = companyResult.data as Company | null
+        setCompany(companyData)
+        // Cache company data for faster subsequent loads
+        if (companyData) {
+          setCachedCompany(userId, companyData)
+        }
       }
     } catch (err) {
       console.error('Error fetching user data:', err)
       setError((err as Error).message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  /**
+   * Refresh company data in background (used after cache hit)
+   */
+  async function refreshCompanyData(userId: string) {
+    try {
+      const { data } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      if (data) {
+        setCompany(data as Company)
+        setCachedCompany(userId, data as Company)
+      }
+    } catch {
+      // Ignore refresh errors
     }
   }
 
@@ -234,6 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserRole(null)
       setProfile(null)
       setCompany(null)
+      clearCachedCompany()
     }
     return { error }
   }

@@ -8,8 +8,9 @@ import { useAuth } from '@/contexts/AuthContext'
 
 export default function PostJobPage() {
   const router = useRouter()
-  const { loading, isAuthenticated, isEmployer, company } = useAuth()
+  const { loading, isAuthenticated, isEmployer, company, user } = useAuth()
 
+  // Redirect logic - only redirect when we're sure about auth state
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/login?redirect=/company/jobs/new')
@@ -19,7 +20,9 @@ export default function PostJobPage() {
     }
   }, [loading, isAuthenticated, isEmployer, router])
 
-  if (loading) {
+  // Show loading only when we don't have user info yet
+  // If we have a user, proceed even if role is still loading (URL indicates employer intent)
+  if (loading && !user) {
     return (
       <DashboardLayout>
         <div className="max-w-2xl">
@@ -40,12 +43,13 @@ export default function PostJobPage() {
     )
   }
 
-  if (!isAuthenticated || !isEmployer) {
+  // Only block if we're sure user isn't authenticated or isn't employer
+  if (!loading && (!isAuthenticated || !isEmployer)) {
     return null
   }
 
-  // Check if company has been set up
-  if (!company) {
+  // Check if company has been set up (only after loading completes and we know there's no company)
+  if (!loading && !company) {
     return (
       <DashboardLayout>
         <div className="max-w-2xl">

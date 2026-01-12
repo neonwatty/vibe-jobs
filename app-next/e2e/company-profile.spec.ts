@@ -5,10 +5,6 @@ import { test, expect } from '@playwright/test'
  *
  * Tests the company profile viewing flow for employers.
  * Uses the authenticated employer session from auth.setup.ts
- *
- * Note: These tests rely on the employer auth context loading properly.
- * The app has a race condition where auth context may take time to load.
- * Tests use longer timeouts to accommodate this.
  */
 
 test.describe('Company Profile', () => {

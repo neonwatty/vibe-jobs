@@ -11,9 +11,13 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
-  const { user, userRole, profile, company, signOut } = useAuth()
+  const { user, userRole, profile, company, loading, signOut } = useAuth()
 
-  const isEmployer = userRole === 'employer'
+  // Determine role based on userRole or URL path as fallback while loading
+  // This prevents the race condition where userRole is null during initial load
+  // while still allowing the page to render with correct navigation
+  const isEmployerPath = pathname.startsWith('/company')
+  const isEmployer = userRole === 'employer' || (loading && user && isEmployerPath)
 
   // Get display name
   const displayName = isEmployer
