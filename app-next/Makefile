@@ -1,6 +1,6 @@
 # Vibe Jobs - Development Commands
 
-.PHONY: dev build start test test-watch test-coverage test-e2e test-e2e-ui test-e2e-headed lint lint-fix typecheck knip check validate
+.PHONY: dev build start test test-watch test-coverage test-e2e test-e2e-ui test-e2e-headed lint lint-fix typecheck knip check validate db-validate
 
 # Development
 dev:
@@ -47,6 +47,10 @@ knip:
 
 knip-production:
 	npm run knip:production
+
+# Database
+db-validate:
+	npm run db:validate
 
 # Combined Commands
 check: lint knip typecheck test build
