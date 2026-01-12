@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const COMPANY_SIZES = [
@@ -49,6 +49,24 @@ export default function CompanyProfileEditor() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // Sync form data when company data loads
+  useEffect(() => {
+    if (company) {
+      setFormData({
+        name: company.name || '',
+        website: company.website || '',
+        logo_url: company.logo_url || '',
+        industry: company.industry || '',
+        company_size: company.company_size || '',
+        headquarters: company.headquarters || '',
+        remote_policy: company.remote_policy || 'hybrid',
+        description: company.description || '',
+        ai_culture: company.ai_culture || '',
+        ai_tools_used: company.ai_tools_used || [],
+      })
+    }
+  }, [company])
 
   const handleChange = (field: string, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))

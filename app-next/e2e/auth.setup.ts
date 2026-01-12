@@ -1,6 +1,7 @@
-import { test as setup, expect } from '@playwright/test'
+import { test as setup, expect, test } from '@playwright/test'
 
 const EMPLOYER_AUTH_FILE = 'e2e/.auth/employer.json'
+const EMPLOYEE_AUTH_FILE = 'e2e/.auth/employee.json'
 
 /**
  * Test account credentials
@@ -8,6 +9,11 @@ const EMPLOYER_AUTH_FILE = 'e2e/.auth/employer.json'
  */
 const TEST_EMPLOYER = {
   email: 'test-employer@aistartup.com',
+  password: 'password123',
+}
+
+const TEST_EMPLOYEE = {
+  email: 'test-employee@example.com',
   password: 'password123',
 }
 
@@ -42,4 +48,41 @@ setup('authenticate as employer', async ({ page }) => {
 
   // Save the authentication state (includes localStorage with company cache)
   await page.context().storageState({ path: EMPLOYER_AUTH_FILE })
+})
+
+setup('authenticate as employee', async ({ page }) => {
+  // Go to login page
+  await page.goto('/login')
+
+  // Fill in credentials
+  await page.fill('input[type="email"]', TEST_EMPLOYEE.email)
+  await page.fill('input[type="password"]', TEST_EMPLOYEE.password)
+
+  // Click sign in button
+  await page.click('button[type="submit"]')
+
+  // Check if login failed (account may not exist)
+  const loginError = page.locator('text=Invalid login credentials')
+  const dashboardUrl = page.waitForURL('/dashboard**', { timeout: 10000 }).catch(() => null)
+
+  // Wait for either error or redirect
+  const result = await Promise.race([
+    loginError.waitFor({ timeout: 5000 }).then(() => 'error'),
+    dashboardUrl.then(() => 'success'),
+  ]).catch(() => 'timeout')
+
+  if (result === 'error') {
+    // Account doesn't exist - skip this setup
+    // Tests using employee auth will be skipped
+    console.log('Employee test account does not exist. Skipping employee auth setup.')
+    console.log('Create the account in Supabase: test-employee@example.com / password123')
+    test.skip()
+    return
+  }
+
+  // Verify we're on the EMPLOYEE dashboard
+  await expect(page.locator('nav a[href="/jobs"]')).toBeVisible({ timeout: 10000 })
+
+  // Save the authentication state
+  await page.context().storageState({ path: EMPLOYEE_AUTH_FILE })
 })
