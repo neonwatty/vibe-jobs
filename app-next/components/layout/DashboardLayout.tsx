@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-8">
             <Link
-              href="/"
+              href={isEmployer ? '/company' : '/dashboard'}
               className="text-display text-xl tracking-tight hover:opacity-80 transition-opacity"
             >
               vibe<span className="text-[var(--color-accent)]">jobs</span>

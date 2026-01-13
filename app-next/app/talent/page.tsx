@@ -23,7 +23,7 @@ export default function TalentPage() {
       {/* Nav */}
       <nav className="container flex items-center justify-between py-6">
         <Link
-          href="/"
+          href={isAuthenticated ? (isEmployer ? '/company' : '/dashboard') : '/'}
           className="text-display text-xl tracking-tight hover:opacity-80 transition-opacity"
         >
           vibe<span className="text-[var(--color-accent)]">jobs</span>

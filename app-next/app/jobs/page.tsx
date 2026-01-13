@@ -40,7 +40,7 @@ export default function JobListings() {
       {/* Nav */}
       <nav className="container flex items-center justify-between py-6">
         <Link
-          href="/"
+          href={isAuthenticated ? (isEmployee ? '/dashboard' : '/company') : '/'}
           className="text-display text-xl tracking-tight hover:opacity-80 transition-opacity"
         >
           vibe<span className="text-[var(--color-accent)]">jobs</span>
