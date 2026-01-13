@@ -6,6 +6,16 @@ import type { Tables, Enums } from '@/lib/database.types'
 
 type DBProfile = Tables<'profiles'>
 
+// Project type stored in raw_json
+export interface TalentProject {
+  id: string
+  name: string
+  description: string
+  repo_url: string
+  demo_url: string
+  tech_stack: string[]
+}
+
 // Profile type for talent listings (public-facing profile data)
 export interface TalentProfile {
   id: string
@@ -20,6 +30,7 @@ export interface TalentProfile {
   linkedin_url: string | null
   profile_complete: boolean
   created_at: string
+  raw_json: { projects?: TalentProject[] } | null
 }
 
 interface TalentFilters {
@@ -65,7 +76,8 @@ export function useTalent(initialFilters: Partial<TalentFilters> = {}) {
           portfolio_urls,
           linkedin_url,
           profile_complete,
-          created_at
+          created_at,
+          raw_json
         `)
         .eq('profile_complete', true)
 

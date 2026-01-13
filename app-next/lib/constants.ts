@@ -54,7 +54,18 @@ export const AI_TOOLS: Record<string, string[]> = {
     'Windsurf',
     'Replit AI',
     'Tabnine',
-    'Amazon CodeWhisperer'
+    'Amazon CodeWhisperer',
+    'Aider',
+    'Continue.dev',
+    'Zed AI',
+    'Sourcegraph Cody',
+    'Supermaven'
+  ],
+  agents: [
+    'Devin',
+    'OpenHands',
+    'SWE-agent',
+    'Sweep AI'
   ],
   chat: [
     'Claude',
@@ -100,9 +111,17 @@ export const AI_TOOLS: Record<string, string[]> = {
   ],
   nocode: [
     'v0',
-    'Bolt',
+    'Bolt.new',
     'Lovable',
-    'Framer AI'
+    'Framer AI',
+    'Webflow AI',
+    'Bubble AI',
+    'Glide',
+    'Softr'
+  ],
+  terminal: [
+    'Warp AI',
+    'Fig'
   ]
 }
 
