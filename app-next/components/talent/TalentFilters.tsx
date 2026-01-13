@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import type { TalentFilters as Filters } from '@/hooks/useTalent'
+import { UNIQUE_AI_TOOLS } from '@/lib/constants'
 
 interface TalentFiltersProps {
   filters: Filters
@@ -24,15 +26,18 @@ const AVAILABILITY = [
   { value: 'open', label: 'Open to Opportunities' },
 ]
 
+// Popular tools shown by default (most commonly used coding/agent tools)
 const POPULAR_TOOLS = [
   'Claude Code',
   'Cursor',
   'GitHub Copilot',
   'ChatGPT',
   'v0',
-  'Replit Agent',
+  'Bolt.new',
   'Windsurf',
-  'Codeium',
+  'Aider',
+  'Devin',
+  'Lovable',
 ]
 
 export default function TalentFilters({
@@ -40,6 +45,8 @@ export default function TalentFilters({
   onFilterChange,
   onClearFilters,
 }: TalentFiltersProps) {
+  const [showAllTools, setShowAllTools] = useState(false)
+
   const hasActiveFilters =
     filters.roleType !== 'all' ||
     filters.availability !== 'all' ||
@@ -52,6 +59,9 @@ export default function TalentFilters({
       : [...filters.tools, tool]
     onFilterChange({ tools: newTools })
   }
+
+  // Get tools to display based on expanded state
+  const displayedTools = showAllTools ? UNIQUE_AI_TOOLS : POPULAR_TOOLS
 
   return (
     <div className="card">
@@ -119,7 +129,7 @@ export default function TalentFilters({
           AI TOOLS
         </label>
         <div className="flex flex-wrap gap-2">
-          {POPULAR_TOOLS.map(tool => (
+          {displayedTools.map(tool => (
             <button
               key={tool}
               onClick={() => toggleTool(tool)}
@@ -133,6 +143,29 @@ export default function TalentFilters({
             </button>
           ))}
         </div>
+
+        {/* Show more/less toggle */}
+        <button
+          onClick={() => setShowAllTools(!showAllTools)}
+          className="text-xs text-[var(--color-accent)] hover:underline mt-3 flex items-center gap-1"
+        >
+          {showAllTools ? (
+            <>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+              Show fewer tools
+            </>
+          ) : (
+            <>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              Show all {UNIQUE_AI_TOOLS.length} tools
+            </>
+          )}
+        </button>
+
         {filters.tools.length > 0 && (
           <p className="text-xs text-[var(--color-text-muted)] mt-2">
             {filters.tools.length} tool{filters.tools.length > 1 ? 's' : ''} selected
