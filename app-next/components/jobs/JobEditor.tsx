@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCompanyJobs } from '@/hooks/useCompanyJobs'
 import type { Enums } from '@/lib/database.types'
+import { UNIQUE_AI_TOOLS } from '@/lib/constants'
 
 const ROLE_CATEGORIES = [
   { value: 'engineer', label: 'Engineering' },
@@ -40,15 +41,18 @@ const AI_PROFICIENCY_LEVELS = [
   { value: 'expert', label: 'Expert', description: 'Highly skilled with AI tools' },
 ]
 
+// Popular tools shown by default
 const POPULAR_TOOLS = [
   'Claude Code',
   'Cursor',
   'GitHub Copilot',
   'ChatGPT',
   'v0',
-  'Replit Agent',
+  'Bolt.new',
   'Windsurf',
-  'Codeium',
+  'Aider',
+  'Devin',
+  'Lovable',
 ]
 
 interface JobEditorProps {
@@ -102,6 +106,10 @@ export default function JobEditor({ initialData, mode = 'create' }: JobEditorPro
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showAllTools, setShowAllTools] = useState(false)
+
+  // Get tools to display based on expanded state
+  const displayedTools = showAllTools ? UNIQUE_AI_TOOLS : POPULAR_TOOLS
 
   const handleChange = (field: string, value: string | number | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -364,7 +372,7 @@ export default function JobEditor({ initialData, mode = 'create' }: JobEditorPro
             REQUIRED AI TOOLS
           </label>
           <div className="flex flex-wrap gap-2">
-            {POPULAR_TOOLS.map(tool => (
+            {displayedTools.map(tool => (
               <button
                 key={tool}
                 type="button"
@@ -384,6 +392,35 @@ export default function JobEditor({ initialData, mode = 'create' }: JobEditorPro
               </button>
             ))}
           </div>
+
+          {/* Show more/less toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAllTools(!showAllTools)}
+            className="text-xs text-[var(--color-accent)] hover:underline mt-3 flex items-center gap-1"
+          >
+            {showAllTools ? (
+              <>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+                Show fewer tools
+              </>
+            ) : (
+              <>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                Show all {UNIQUE_AI_TOOLS.length} tools
+              </>
+            )}
+          </button>
+
+          {formData.ai_tools_required.length > 0 && (
+            <p className="text-xs text-[var(--color-text-muted)] mt-2">
+              {formData.ai_tools_required.length} tool{formData.ai_tools_required.length > 1 ? 's' : ''} selected
+            </p>
+          )}
         </div>
       </div>
 

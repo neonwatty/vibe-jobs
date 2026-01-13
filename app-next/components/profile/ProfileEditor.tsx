@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import type { Json } from '@/lib/database.types'
+import { UNIQUE_AI_TOOLS } from '@/lib/constants'
 
 const ROLE_TYPES = [
   { value: 'engineer', label: 'Engineering' },
@@ -20,17 +21,18 @@ const AVAILABILITY_OPTIONS = [
   { value: 'not_looking', label: 'Not Looking', description: 'Not interested in new opportunities' },
 ]
 
+// Popular tools shown by default
 const POPULAR_TOOLS = [
   'Claude Code',
   'Cursor',
   'GitHub Copilot',
   'ChatGPT',
   'v0',
-  'Replit Agent',
+  'Bolt.new',
   'Windsurf',
-  'Codeium',
-  'Tabnine',
-  'Amazon Q',
+  'Aider',
+  'Devin',
+  'Lovable',
 ]
 
 interface Project {
@@ -70,7 +72,11 @@ export default function ProfileEditor() {
   const [success, setSuccess] = useState(false)
   const [uploadingResume, setUploadingResume] = useState(false)
   const [resumeError, setResumeError] = useState<string | null>(null)
+  const [showAllTools, setShowAllTools] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Get tools to display based on expanded state
+  const displayedTools = showAllTools ? UNIQUE_AI_TOOLS : POPULAR_TOOLS
 
   const ALLOWED_FILE_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -448,7 +454,7 @@ export default function ProfileEditor() {
         </p>
 
         <div className="flex flex-wrap gap-2">
-          {POPULAR_TOOLS.map(tool => (
+          {displayedTools.map(tool => (
             <button
               key={tool}
               type="button"
@@ -468,6 +474,29 @@ export default function ProfileEditor() {
             </button>
           ))}
         </div>
+
+        {/* Show more/less toggle */}
+        <button
+          type="button"
+          onClick={() => setShowAllTools(!showAllTools)}
+          className="text-xs text-[var(--color-accent)] hover:underline mt-3 flex items-center gap-1"
+        >
+          {showAllTools ? (
+            <>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+              Show fewer tools
+            </>
+          ) : (
+            <>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              Show all {UNIQUE_AI_TOOLS.length} tools
+            </>
+          )}
+        </button>
 
         {formData.ai_tools.length > 0 && (
           <p className="text-sm text-[var(--color-text-muted)] mt-4">
