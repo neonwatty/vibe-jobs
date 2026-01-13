@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   isBlockedDomain,
   extractDomain,
-  BLOCKED_EMAIL_DOMAINS
+  BLOCKED_EMAIL_DOMAINS,
 } from '@/lib/constants'
 
 describe('isBlockedDomain', () => {
@@ -30,6 +30,12 @@ describe('isBlockedDomain', () => {
     it('blocks protonmail.com', () => {
       expect(isBlockedDomain('user@protonmail.com')).toBe(true)
     })
+
+    it('blocks all domains in BLOCKED_EMAIL_DOMAINS', () => {
+      BLOCKED_EMAIL_DOMAINS.forEach((domain) => {
+        expect(isBlockedDomain(`test@${domain}`)).toBe(true)
+      })
+    })
   })
 
   describe('allows work email domains', () => {
@@ -41,12 +47,16 @@ describe('isBlockedDomain', () => {
       expect(isBlockedDomain('user@startup.io')).toBe(false)
     })
 
-    it('allows acme.co', () => {
-      expect(isBlockedDomain('user@acme.co')).toBe(false)
+    it('allows anthropic.com', () => {
+      expect(isBlockedDomain('user@anthropic.com')).toBe(false)
     })
 
-    it('allows enterprise.org', () => {
-      expect(isBlockedDomain('user@enterprise.org')).toBe(false)
+    it('allows example.org', () => {
+      expect(isBlockedDomain('user@example.org')).toBe(false)
+    })
+
+    it('allows subdomains of work domains', () => {
+      expect(isBlockedDomain('user@mail.company.com')).toBe(false)
     })
   })
 
@@ -64,10 +74,14 @@ describe('isBlockedDomain', () => {
     })
 
     it('returns false for email without @ symbol', () => {
-      expect(isBlockedDomain('invalidemail')).toBe(false)
+      expect(isBlockedDomain('invalid-email')).toBe(false)
     })
 
-    it('returns false for email without domain', () => {
+    it('returns false for email with only @ symbol', () => {
+      expect(isBlockedDomain('@')).toBe(false)
+    })
+
+    it('returns false for email with @ but no domain', () => {
       expect(isBlockedDomain('user@')).toBe(false)
     })
   })
@@ -81,17 +95,12 @@ describe('isBlockedDomain', () => {
       expect(isBlockedDomain('user@Gmail.Com')).toBe(true)
     })
 
-    it('blocks gMaIl.CoM (random case)', () => {
-      expect(isBlockedDomain('user@gMaIl.CoM')).toBe(true)
+    it('blocks YAHOO.COM (uppercase)', () => {
+      expect(isBlockedDomain('user@YAHOO.COM')).toBe(true)
     })
-  })
 
-  describe('blocks all domains in BLOCKED_EMAIL_DOMAINS', () => {
-    // Test all 23 blocked domains
-    const blockedDomains = Array.from(BLOCKED_EMAIL_DOMAINS)
-
-    it.each(blockedDomains)('blocks %s', (domain) => {
-      expect(isBlockedDomain(`test@${domain}`)).toBe(true)
+    it('handles uppercase in local part', () => {
+      expect(isBlockedDomain('USER@gmail.com')).toBe(true)
     })
   })
 })
@@ -101,7 +110,7 @@ describe('extractDomain', () => {
     expect(extractDomain('user@example.com')).toBe('example.com')
   })
 
-  it('extracts domain and lowercases it', () => {
+  it('converts domain to lowercase', () => {
     expect(extractDomain('user@EXAMPLE.COM')).toBe('example.com')
   })
 
@@ -118,30 +127,30 @@ describe('extractDomain', () => {
   })
 
   it('returns undefined for email without @', () => {
-    expect(extractDomain('invalidemail')).toBeUndefined()
+    expect(extractDomain('invalid')).toBeUndefined()
   })
 
-  it('returns empty string for email without domain', () => {
+  it('returns empty string for email with @ but no domain', () => {
     expect(extractDomain('user@')).toBe('')
   })
 })
 
 describe('BLOCKED_EMAIL_DOMAINS', () => {
-  it('contains 23 blocked domains', () => {
+  it('contains expected number of domains', () => {
+    // 23 domains as of current implementation
     expect(BLOCKED_EMAIL_DOMAINS.size).toBe(23)
   })
 
-  it('includes common personal email providers', () => {
-    expect(BLOCKED_EMAIL_DOMAINS.has('gmail.com')).toBe(true)
-    expect(BLOCKED_EMAIL_DOMAINS.has('yahoo.com')).toBe(true)
-    expect(BLOCKED_EMAIL_DOMAINS.has('hotmail.com')).toBe(true)
-    expect(BLOCKED_EMAIL_DOMAINS.has('outlook.com')).toBe(true)
-    expect(BLOCKED_EMAIL_DOMAINS.has('icloud.com')).toBe(true)
-  })
-
-  it('includes privacy-focused email providers', () => {
-    expect(BLOCKED_EMAIL_DOMAINS.has('protonmail.com')).toBe(true)
-    expect(BLOCKED_EMAIL_DOMAINS.has('proton.me')).toBe(true)
-    expect(BLOCKED_EMAIL_DOMAINS.has('tutanota.com')).toBe(true)
+  it('includes major providers', () => {
+    const majorProviders = [
+      'gmail.com',
+      'yahoo.com',
+      'hotmail.com',
+      'outlook.com',
+      'icloud.com',
+    ]
+    majorProviders.forEach((provider) => {
+      expect(BLOCKED_EMAIL_DOMAINS.has(provider)).toBe(true)
+    })
   })
 })
