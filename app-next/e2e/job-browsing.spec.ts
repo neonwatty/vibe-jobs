@@ -129,6 +129,39 @@ test.describe('Public Job Browsing', () => {
       }
     }
   })
+
+  test('shows source URL link when job has source_url', async ({ page }) => {
+    await page.goto('/jobs')
+
+    // Wait for jobs to load
+    await expect(page.locator('h2:has-text("jobs")')).toBeVisible({ timeout: 30000 })
+
+    // Find a job link
+    const jobLink = page.locator('a[href^="/jobs/"]:not([href="/jobs"])').first()
+
+    if (await jobLink.isVisible({ timeout: 5000 })) {
+      const href = await jobLink.getAttribute('href')
+      if (href) {
+        await page.goto(href)
+
+        // Wait for job details to load
+        await page.waitForLoadState('networkidle')
+
+        // Check if the source URL section exists (only appears if job has source_url)
+        const sourceSection = page.locator('text=Original posting')
+        const viewSourceLink = page.locator('a:has-text("View source")')
+
+        // If source URL exists, verify the link is properly formatted
+        if (await sourceSection.isVisible({ timeout: 2000 }).catch(() => false)) {
+          await expect(viewSourceLink).toBeVisible()
+          // Verify it opens in new tab
+          await expect(viewSourceLink).toHaveAttribute('target', '_blank')
+          await expect(viewSourceLink).toHaveAttribute('rel', 'noopener noreferrer')
+        }
+        // If no source URL, the section shouldn't be visible - that's also valid
+      }
+    }
+  })
 })
 
 test.describe('Authenticated Job Application', () => {
