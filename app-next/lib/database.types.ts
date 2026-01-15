@@ -182,6 +182,7 @@ export type Database = {
           salary_currency: string
           salary_max: number
           salary_min: number
+          source_url: string | null
           status: string
           title: string
           updated_at: string
@@ -209,6 +210,7 @@ export type Database = {
           salary_currency?: string
           salary_max: number
           salary_min: number
+          source_url?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -236,6 +238,7 @@ export type Database = {
           salary_currency?: string
           salary_max?: number
           salary_min?: number
+          source_url?: string | null
           status?: string
           title?: string
           updated_at?: string

@@ -1,13 +1,58 @@
 /**
  * Database Seed Script
  * Run with: npx tsx scripts/seed.ts
+ *
+ * This script seeds the database with:
+ * 1. Sample companies
+ * 2. Sample jobs (original + scraped from job-seeds.json)
+ * 3. Sample profiles
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import type { Database } from '../lib/database.types'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+// Load scraped jobs from seed file
+interface ScrapedJob {
+  job_title: string
+  company_name: string
+  company_description: string
+  location_type: 'remote' | 'hybrid' | 'onsite'
+  location_details: string
+  role_category: string
+  experience_level: string
+  employment_type: string
+  salary_min: number
+  salary_max: number
+  description: string
+  ai_tools_required: string[]
+  ai_proficiency: 'familiar' | 'proficient' | 'expert'
+  how_youll_be_tested: string
+  benefits: string[]
+  source_url?: string
+}
+
+interface SeedFile {
+  scraped_at: string
+  source: string
+  jobs: ScrapedJob[]
+}
+
+function loadScrapedJobs(): ScrapedJob[] {
+  try {
+    const seedPath = join(__dirname, '../../scraped-jobs/job-seeds.json')
+    const seedData = JSON.parse(readFileSync(seedPath, 'utf-8')) as SeedFile
+    console.log(`Loaded ${seedData.jobs.length} scraped jobs from ${seedData.source}`)
+    return seedData.jobs
+  } catch (error) {
+    console.warn('Could not load scraped jobs:', error)
+    return []
+  }
+}
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing environment variables. Need NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY')
@@ -358,66 +403,237 @@ const profiles = [
 async function seed() {
   console.log('Starting database seed...\n')
 
-  // Create a fake user ID for seeding (we'll use a placeholder since we can't create auth users)
-  const fakeUserId = '00000000-0000-0000-0000-000000000001'
+  // Get real user IDs from the database
+  console.log('Fetching existing users...')
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('id, email, role')
 
-  // Insert companies
-  console.log('Inserting companies...')
-  const companyIds: string[] = []
-  for (const company of companies) {
-    const { data, error } = await supabase
-      .from('companies')
-      .insert({
-        ...company,
-        user_id: fakeUserId,
-      })
-      .select('id')
-      .single()
+  if (usersError || !users || users.length === 0) {
+    console.error('Error: Could not fetch users. Make sure test users exist in the database.')
+    console.error('Run the create-test-employee script first if needed.')
+    process.exit(1)
+  }
 
-    if (error) {
-      console.error(`  Error inserting ${company.name}:`, error.message)
-    } else {
-      console.log(`  Created: ${company.name}`)
-      companyIds.push(data.id)
+  // Find employer and employee user IDs
+  const employerUser = users.find(u => u.role === 'employer')
+  const employeeUser = users.find(u => u.role === 'employee')
+
+  if (!employerUser) {
+    console.error('Error: No employer user found in the database.')
+    process.exit(1)
+  }
+
+  console.log(`  Using employer: ${employerUser.email} (${employerUser.id})`)
+  if (employeeUser) {
+    console.log(`  Using employee: ${employeeUser.email} (${employeeUser.id})`)
+  }
+
+  const employerUserId = employerUser.id
+  const employeeUserId = employeeUser?.id
+
+  // Check if sample data already exists (skip if so to make script idempotent)
+  const { data: existingCompanies } = await supabase.from('companies').select('id').limit(1)
+  const { data: existingProfiles } = await supabase.from('profiles').select('id').limit(1)
+
+  if (existingCompanies && existingCompanies.length > 0) {
+    console.log('\nSkipping sample companies: Data already exists')
+    console.log('Skipping sample jobs: Data already exists')
+  } else {
+    // Insert companies
+    console.log('\nInserting companies...')
+    const companyIds: string[] = []
+    for (const company of companies) {
+      const { data, error } = await supabase
+        .from('companies')
+        .insert({
+          ...company,
+          user_id: employerUserId,
+        })
+        .select('id')
+        .single()
+
+      if (error) {
+        console.error(`  Error inserting ${company.name}:`, error.message)
+      } else {
+        console.log(`  Created: ${company.name}`)
+        companyIds.push(data.id)
+      }
+    }
+
+    // Insert jobs
+    console.log('\nInserting jobs...')
+    for (let i = 0; i < jobTemplates.length; i++) {
+      const job = jobTemplates[i]
+      const companyId = companyIds[i % companyIds.length] // Distribute jobs across companies
+
+      const { error } = await supabase
+        .from('jobs')
+        .insert({
+          ...job,
+          company_id: companyId,
+        })
+
+      if (error) {
+        console.error(`  Error inserting ${job.title}:`, error.message)
+      } else {
+        console.log(`  Created: ${job.title}`)
+      }
     }
   }
 
-  // Insert jobs
-  console.log('\nInserting jobs...')
-  for (let i = 0; i < jobTemplates.length; i++) {
-    const job = jobTemplates[i]
-    const companyId = companyIds[i % companyIds.length] // Distribute jobs across companies
-
-    const { error } = await supabase
-      .from('jobs')
-      .insert({
-        ...job,
-        company_id: companyId,
-      })
-
-    if (error) {
-      console.error(`  Error inserting ${job.title}:`, error.message)
-    } else {
-      console.log(`  Created: ${job.title}`)
-    }
-  }
-
-  // Insert profiles
-  console.log('\nInserting profiles...')
-  for (const profile of profiles) {
-    const fakeProfileUserId = `00000000-0000-0000-0000-00000000000${profiles.indexOf(profile) + 2}`
-
+  // Insert profiles (skip if data already exists)
+  if (existingProfiles && existingProfiles.length > 0) {
+    console.log('\nSkipping sample profiles: Data already exists')
+  } else if (!employeeUserId) {
+    console.log('\nSkipping profiles: No employee user found')
+  } else {
+    console.log('\nInserting profiles...')
+    // Only insert one profile since we only have one employee user
+    const profile = profiles[0]
     const { error } = await supabase
       .from('profiles')
       .insert({
         ...profile,
-        user_id: fakeProfileUserId,
+        user_id: employeeUserId,
       })
 
     if (error) {
       console.error(`  Error inserting ${profile.first_name} ${profile.last_name}:`, error.message)
     } else {
       console.log(`  Created: ${profile.first_name} ${profile.last_name}`)
+    }
+  }
+
+  // =========================================================================
+  // IMPORT SCRAPED JOBS
+  // =========================================================================
+  console.log('\n--- Importing Scraped Jobs ---\n')
+
+  const scrapedJobs = loadScrapedJobs()
+  if (scrapedJobs.length === 0) {
+    console.log('No scraped jobs to import.')
+  } else {
+    // Get or create a company for scraped jobs
+    // Due to schema constraints (one company per user), we use the existing employer's company
+    console.log('Finding company for scraped jobs...')
+
+    let scrapedJobsCompanyId: string
+
+    // First, try to find an existing company for this employer
+    const { data: existingCompany } = await supabase
+      .from('companies')
+      .select('id, name')
+      .eq('user_id', employerUserId)
+      .single()
+
+    if (existingCompany) {
+      scrapedJobsCompanyId = existingCompany.id
+      console.log(`  Using existing company: ${existingCompany.name}`)
+    } else {
+      // Create a new company for the employer
+      const { data: newCompany, error: createError } = await supabase
+        .from('companies')
+        .insert({
+          name: 'Vibe Jobs Demo Company',
+          description: 'Demo company for showcasing AI-native job listings',
+          email_domain: 'vibejobs.demo',
+          user_id: employerUserId,
+          domain_verified: false,
+          ai_tools_used: ['Cursor', 'Claude Code', 'GitHub Copilot'],
+        })
+        .select('id')
+        .single()
+
+      if (createError || !newCompany) {
+        console.error('  Error creating company for scraped jobs:', createError?.message)
+        process.exit(1)
+      }
+
+      scrapedJobsCompanyId = newCompany.id
+      console.log('  Created new company: Vibe Jobs Demo Company')
+    }
+
+    // Helper to map role_category string to enum
+    const mapRoleCategory = (category: string): 'engineer' | 'product' | 'marketer' | 'sales' | 'ops' | 'other' => {
+      const mapping: Record<string, 'engineer' | 'product' | 'marketer' | 'sales' | 'ops' | 'other'> = {
+        engineer: 'engineer',
+        product: 'product',
+        marketer: 'marketer',
+        sales: 'sales',
+        ops: 'ops',
+        instructor: 'other',
+        other: 'other',
+      }
+      return mapping[category.toLowerCase()] || 'other'
+    }
+
+    // Helper to map experience_level string to enum
+    const mapExperienceLevel = (level: string): 'entry' | 'mid' | 'senior' | 'lead' => {
+      const mapping: Record<string, 'entry' | 'mid' | 'senior' | 'lead'> = {
+        junior: 'entry',
+        entry: 'entry',
+        mid: 'mid',
+        senior: 'senior',
+        lead: 'lead',
+      }
+      return mapping[level.toLowerCase()] || 'mid'
+    }
+
+    // Helper to map employment_type string to enum
+    const mapEmploymentType = (type: string): 'full_time' | 'part_time' | 'contract' => {
+      const mapping: Record<string, 'full_time' | 'part_time' | 'contract'> = {
+        full_time: 'full_time',
+        part_time: 'part_time',
+        contract: 'contract',
+        contractor: 'contract',
+      }
+      return mapping[type.toLowerCase()] || 'full_time'
+    }
+
+    // Insert scraped jobs (skip duplicates by checking title)
+    console.log('\nInserting scraped jobs...')
+    for (const job of scrapedJobs) {
+      // Check if job already exists (by title only to avoid all duplicates)
+      const { data: existing } = await supabase
+        .from('jobs')
+        .select('id')
+        .eq('title', job.job_title)
+        .limit(1)
+
+      if (existing && existing.length > 0) {
+        console.log(`  Skipped (exists): ${job.job_title}`)
+        continue
+      }
+
+      const { error } = await supabase
+        .from('jobs')
+        .insert({
+          company_id: scrapedJobsCompanyId,
+          title: job.job_title,
+          description: job.description,
+          role_category: mapRoleCategory(job.role_category),
+          experience_level: mapExperienceLevel(job.experience_level),
+          employment_type: mapEmploymentType(job.employment_type),
+          location_type: job.location_type,
+          location_details: job.location_details,
+          salary_min: job.salary_min,
+          salary_max: job.salary_max,
+          salary_currency: 'USD',
+          ai_tools_required: job.ai_tools_required,
+          ai_proficiency: job.ai_proficiency,
+          how_youll_be_tested: job.how_youll_be_tested,
+          benefits: job.benefits,
+          source_url: job.source_url || null,
+          status: 'active',
+          is_active: true,
+        })
+
+      if (error) {
+        console.error(`  Error inserting ${job.job_title}:`, error.message)
+      } else {
+        console.log(`  Created: ${job.job_title} at ${job.company_name}`)
+      }
     }
   }
 
