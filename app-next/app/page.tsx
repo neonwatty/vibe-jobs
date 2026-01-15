@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-grid">
+    <div className="min-h-screen bg-grid flex flex-col">
       {/* Nav */}
       <nav className="container flex items-center justify-between py-6">
         <Link
@@ -12,6 +12,8 @@ export default function LandingPage() {
           vibe<span className="text-[var(--color-accent)]">jobs</span>
         </Link>
         <div className="flex items-center gap-4">
+          <Link href="/for/talent" className="btn btn-ghost hidden md:inline-flex">For Talent</Link>
+          <Link href="/for/employers" className="btn btn-ghost hidden md:inline-flex">For Employers</Link>
           <Link href="/jobs" className="btn btn-ghost">Browse Jobs</Link>
           <Link href="/login" className="btn btn-ghost">Log in</Link>
           <Link href="/signup" className="btn btn-primary">Get Started</Link>
@@ -19,7 +21,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <main className="container py-20">
+      <main className="container py-20 flex-1">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-display text-5xl md:text-6xl mb-6">
             Find jobs that embrace <span className="text-[var(--color-accent)]">AI tools</span>
@@ -28,12 +30,12 @@ export default function LandingPage() {
             The job board for AI-native professionals. No LeetCode, no whiteboard algorithms.
             Just practical skills with the tools you actually use.
           </p>
-          <div className="flex items-center justify-center gap-4">
-            <Link href="/jobs" className="btn btn-primary btn-lg">
-              Browse Jobs
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/for/talent" className="btn btn-primary btn-lg w-full sm:w-auto">
+              Find a Job
             </Link>
-            <Link href="/signup" className="btn btn-secondary btn-lg">
-              Create Profile
+            <Link href="/for/employers" className="btn btn-secondary btn-lg w-full sm:w-auto">
+              Post a Job
             </Link>
           </div>
         </div>
@@ -77,6 +79,39 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-[var(--color-border)]">
+        <div className="container py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <Link
+                href="/"
+                className="text-display text-lg tracking-tight hover:opacity-80 transition-opacity"
+              >
+                vibe<span className="text-[var(--color-accent)]">jobs</span>
+              </Link>
+              <span className="text-[var(--color-text-muted)] text-sm">
+                The anti-LeetCode job board
+              </span>
+            </div>
+            <div className="flex items-center gap-6 text-sm">
+              <Link href="/about" className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+                About
+              </Link>
+              <Link href="/help" className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+                Help
+              </Link>
+              <Link href="/jobs" className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+                Jobs
+              </Link>
+              <Link href="/talent" className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+                Talent
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
