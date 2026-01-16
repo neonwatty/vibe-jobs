@@ -417,6 +417,42 @@
       "how_youll_be_tested": "Technical deep-dive on architecture and leadership. We evaluate your ability to drive technical excellence at scale.",
       "benefits": ["$140.4K-$372.3K salary", "Significant equity", "Remote", "Health benefits", "Unlimited PTO"],
       "source_url": "https://www.linkedin.com/jobs/view/staff-software-engineer-github"
+    },
+    {
+      "job_title": "Staff Software Developer in Test",
+      "company_name": "Findem",
+      "company_description": "HR 2.0 fast-growth startup using AI and machine learning for talent acquisition and people analytics. PE-backed with investors including Wing Venture Capital (Snowflake, Cohesity, Gong).",
+      "location_type": "remote",
+      "location_details": "Mundelein, IL or Remote",
+      "role_category": "engineer",
+      "experience_level": "lead",
+      "employment_type": "full_time",
+      "salary_min": 106000,
+      "salary_max": 137000,
+      "description": "Lead the charge in leveraging AI technologies for development and testing at Findem. You'll help modernize QA processes and scale testing across AI-driven products.\n\nResponsibilities:\n- Support QA team working on Findem's products\n- Use AI tools to help engineering teams on testing coverage and automations\n- Create testing frameworks to help QA handle more workloads concurrently\n- Champion and guide engineers on AI tools to improve development and QA processes\n- Hands-on experience with White box & Black box testing\n\nRequirements:\n- Bachelor's in Computer Science or related field\n- 10+ years of experience in the SDET discipline\n- Knowledge of AI tools for development and testing: VS+ Cline, ChatGPT, GitHub Copilot, Codeium, Claude, Cursor + Cody\n- Experience with Bitbucket, Git, Jira, CI/CD (Jenkins), Playwright/Selenium\n- Ability to code in TypeScript, Java, Python, Shell scripting",
+      "ai_tools_required": ["GitHub Copilot", "Codeium", "Claude", "Cursor", "Cline", "Cody"],
+      "ai_proficiency": "expert",
+      "how_youll_be_tested": "Technical interview covering SDET experience and your proficiency with AI coding tools. We evaluate your ability to champion AI-assisted development practices.",
+      "benefits": ["Competitive salary + performance bonus", "Unlimited PTO", "Healthcare", "Home office stipend", "Professional development budget"],
+      "source_url": "https://www.ziprecruiter.com/jobs-search?search=%22cursor%22+%22copilot%22+developer"
+    },
+    {
+      "job_title": "Sr Fullstack Developer (GenAI)",
+      "company_name": "HirexHire",
+      "company_description": "Recruiting consultancy placing for a PE-backed Legal/AI SaaS company at the forefront of legal technology. The client offers productivity and risk management software for law firms globally.",
+      "location_type": "hybrid",
+      "location_details": "Denver, CO (Hybrid) or Remote",
+      "role_category": "engineer",
+      "experience_level": "senior",
+      "employment_type": "full_time",
+      "salary_min": 150000,
+      "salary_max": 200000,
+      "description": "Lead teams of AI coding agents to design and develop GenAI features for a market-leading legal tech company. Function as a GenAI evangelist helping to fully leverage coding assistant and coding agent tools.\n\nResponsibilities:\n- Act as governing lead for teams of virtual developers using Cognition AI's Devin or similar toolsets\n- Design innovative GenAI-based products using tools like Cline, Replit, and Cursor\n- Research, evaluate, and document new AI dev agents and tools\n- Collaborate with Engineering and Product Management\n- Define new opportunities for leveraging GenAI to improve products\n\nRequirements:\n- 5+ years software development with strong backend competence\n- 5+ years with .NET/.NET Core, ASP.NET Core, Web/REST APIs\n- Experience with React/Vue/Angular/Svelte, TypeScript\n- AI development experience with LLMs (Azure OpenAI, Anthropic), Prompt Engineering, RAG\n- Experience with GitHub/Azure DevOps, VS Code",
+      "ai_tools_required": ["Devin", "Cline", "Replit", "Cursor"],
+      "ai_proficiency": "expert",
+      "how_youll_be_tested": "Technical interview covering full-stack development and your experience leading AI coding agent teams. We evaluate your vision for AI-augmented development.",
+      "benefits": ["Medical", "Retirement", "PTO", "Remote flexibility"],
+      "source_url": "https://www.ziprecruiter.com/jobs-search?search=%22cursor%22+%22copilot%22+developer"
     }
   ]
 }
