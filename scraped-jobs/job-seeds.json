@@ -1,6 +1,6 @@
 {
-  "scraped_at": "2026-01-15",
-  "source": "Web Search (ZipRecruiter, Glassdoor, Cursor Directory, Indeed, GoodVibeCode)",
+  "scraped_at": "2026-01-16",
+  "source": "Web Search (ZipRecruiter, Glassdoor, Cursor Directory, Indeed, GoodVibeCode, LinkedIn, Hacker News Who's Hiring)",
   "search_query": "developers using AI coding tools Cursor Copilot Claude Code",
   "notes": "Jobs for developers who USE AI coding assistants in their daily work, not AI engineers building AI systems",
   "jobs": [
@@ -417,6 +417,60 @@
       "how_youll_be_tested": "Technical deep-dive on architecture and leadership. We evaluate your ability to drive technical excellence at scale.",
       "benefits": ["$140.4K-$372.3K salary", "Significant equity", "Remote", "Health benefits", "Unlimited PTO"],
       "source_url": "https://www.linkedin.com/jobs/view/staff-software-engineer-github"
+    },
+    {
+      "job_title": "Director of Engineering (Player-Coach)",
+      "company_name": "2NDNATURE",
+      "company_description": "Small SaaS company providing stormwater management software to municipalities and corporations. Mature product grounded in science with a solid customer base, at a technical inflection point transitioning to an AI-first platform.",
+      "location_type": "onsite",
+      "location_details": "Santa Cruz, CA",
+      "role_category": "engineer",
+      "experience_level": "lead",
+      "employment_type": "full_time",
+      "salary_min": 180000,
+      "salary_max": 250000,
+      "description": "Lead our transition into an AI-first platform as a true player-coach—a hands-on leader who loves writing code (60% of the role) and mentoring a small team of developers.\n\nResponsibilities:\n- Lead by example: Write code, review PRs, and establish engineering best practices (testing, CI/CD, SOC2)\n- Collaborate directly with the CEO and CPO in a transparent decision-making environment\n- Help adopt modern tools like Claude Code and Copilot to scale our capacity\n- Mentor a small team of developers\n\nRequirements:\n- Strong hands-on engineering skills\n- Experience leading and mentoring engineering teams\n- Passion for adopting modern AI development tools\n- Experience with SaaS product development",
+      "ai_tools_required": ["Claude Code", "GitHub Copilot"],
+      "ai_proficiency": "proficient",
+      "how_youll_be_tested": "Technical interview covering hands-on engineering skills and leadership experience. We value developers who embrace modern AI tools.",
+      "benefits": ["Competitive salary", "Equity", "Work with CEO/CPO directly", "Technical leadership role"],
+      "source_url": "https://news.ycombinator.com/item?id=46466074"
+    },
+    {
+      "job_title": "Software Engineer",
+      "company_name": "Rising Team",
+      "company_description": "Transforming how the world's leading organizations develop high-performing managers and teams. Mission is that everyone in the workplace feels understood, supported, and empowered.",
+      "location_type": "remote",
+      "location_details": "Remote (US, Pacific Time adjacent)",
+      "role_category": "engineer",
+      "experience_level": "mid",
+      "employment_type": "full_time",
+      "salary_min": 130000,
+      "salary_max": 180000,
+      "description": "Build AI-powered engineering solutions at Rising Team.\n\nIf building with AI tools like Claude Code excites you and you find yourself thinking a lot about what great, high quality AI-powered engineering looks like, please apply!\n\nRequirements:\n- Experience with modern web development\n- Passion for AI-powered development workflows\n- Strong engineering fundamentals\n- Experience with Claude Code or similar AI coding tools",
+      "ai_tools_required": ["Claude Code"],
+      "ai_proficiency": "proficient",
+      "how_youll_be_tested": "Technical interview focused on AI-powered engineering practices and software development fundamentals.",
+      "benefits": ["Competitive salary", "Remote-first", "Mission-driven team", "Work-life balance"],
+      "source_url": "https://risingteam.com/careers-openings?bzid=2a63ef877906"
+    },
+    {
+      "job_title": "Senior Mobile Engineer",
+      "company_name": "Noise Labs",
+      "company_description": "Mobile-first startup building React Native apps. Focus on performance, motion, and polish—every frame and gesture should feel native.",
+      "location_type": "remote",
+      "location_details": "Remote",
+      "role_category": "engineer",
+      "experience_level": "senior",
+      "employment_type": "full_time",
+      "salary_min": 150000,
+      "salary_max": 200000,
+      "description": "Architect and build our React Native app from zero to launch. Own performance, motion, and polish.\n\nRequirements:\n- Not a vibecoder—uses Cursor or similar to empower, not replace\n- Strong attention to detail and self-QA\n- Taste for motion and interaction design\n- Experience with React Native development\n- Ability to ship polished, production-ready mobile apps",
+      "ai_tools_required": ["Cursor"],
+      "ai_proficiency": "proficient",
+      "how_youll_be_tested": "Technical interview focused on React Native architecture and mobile performance. We evaluate your taste for detail and AI-assisted development workflow.",
+      "benefits": ["Competitive salary", "Equity", "Remote-first", "Ship from zero to launch"],
+      "source_url": "https://jobs.ashbyhq.com/noise-labs"
     }
   ]
 }
